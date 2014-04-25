@@ -1,0 +1,14 @@
+package web
+
+import (
+	"github.com/leptonyu/goeast"
+)
+
+func init() {
+	m := make(map[string]string)
+	m["token"] = "1212121"
+	m["appid"] = "wechat-go"
+	m["appsecret"] = "xxxxxxxx"
+	m["url"] = "http://www.goeastmandarin.com"
+	goeast.Init(m)
+}

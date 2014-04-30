@@ -28,6 +28,9 @@ if [ -n "$PM" ]; then
 	elif echo "$PM" | grep -iqE '^status$'; then
 		ps -ef | grep $PRGNAME | grep port
 		exit 0
+	elif echo "$PM" | grep -iqE '^log$'; then
+		tail -f $SRC/.port/*.log
+		exit 0
 	else
 		echo Unknown parameter "$PM"
 		exit 201

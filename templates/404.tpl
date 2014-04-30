@@ -18,9 +18,9 @@
     *****************
 -->
 
-<link rel="stylesheet" href="/static/base.css">
-<link rel="stylesheet" href="/static/skeleton.css">
-<link rel="stylesheet" href="/static/layout.css">
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/skeleton.css">
+<link rel="stylesheet" href="/static/css/layout.css">
 
 <!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -37,9 +37,9 @@
 <script src="/static/common.js"></script>
 
 <link rel="shortcut icon" href="/static/favicon.ico">
-<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="72x72" href="/static/apple-touch-icon-72x72.png">
-<link rel="apple-touch-icon" sizes="114x114" href="/static/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/static/images/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/static/images/apple-touch-icon-114x114.png">
 
 </head>
 
@@ -58,7 +58,7 @@
     <section class="general_content_holder">
     	<div class="container" style="text-align:center;">
         	<h1>Unable to find <span>the engine!</span> </h1>
-            <img src="/static/404_image.gif">
+            <img src="/static/images/404_image.gif">
         </div>
     </section>
 

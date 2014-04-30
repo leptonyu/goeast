@@ -17,7 +17,7 @@
 	<div class="waiting panelContent">
 		<div class="qrcodeContent" style="position:relative;">
 			<div class="qrcodePanel">
-				 <img class="qrcode lightBorder" id="loginQrCode" src="static/qrcode.jpg" width="300" height="300" alt="WeChat ID" />
+				 <img class="qrcode lightBorder" id="loginQrCode" src="static/images/qrcode.jpg" width="300" height="300" alt="WeChat ID" />
 			</div>
 			<div id="guideTrigger" style="position:absolute;z-index:9999;width:260px;height:100%;left:50%;top:0px;margin-left:-130px;"></div>
 		</div>
@@ -29,7 +29,7 @@
 				<div id="tipTrigger" style="position:absolute;z-index:9999;width:100%;height:100%;left:0px;top:0px;"></div>
 			</div>
             
-      <img class="guide pngImg" style="z-index:500;" src="/static/login_guide17ced3.png"/>
+      <img class="guide pngImg" style="z-index:500;" src="/static/images/login_guide17ced3.png"/>
       
       
       

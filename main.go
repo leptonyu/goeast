@@ -29,13 +29,13 @@ func startWeb(port int) {
 	m := martini.Classic()
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		t := template.New("404.tpl")
-		t, _ = t.ParseFiles("templates/404.html")
+		t, _ = t.ParseFiles("templates/404.tpl")
 		t.Execute(w, m)
 	})
 	m.Use(martini.Static("static", martini.StaticOptions{Prefix: "static"}))
 	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		t := template.New("index.tpl")
-		t, _ = t.ParseFiles("templates/index.html")
+		t, _ = t.ParseFiles("templates/index.tpl")
 		t.Execute(w, m)
 	})
 	//Create new configuration

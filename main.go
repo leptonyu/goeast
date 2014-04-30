@@ -9,7 +9,8 @@ import (
 func main() {
 	port := flag.Int("port", 8080, "Web service port")
 	dbname := flag.String("dbname", "goeast", "MongoDB name")
-	help := flag.Bool("help", false, "Help")
+	api := flag.String("api", "api", "http://localhost/$api")
+	help := flag.Bool("h", false, "Help")
 	flag.Parse()
 	if *help {
 		flag.PrintDefaults()

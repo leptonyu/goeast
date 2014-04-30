@@ -14,6 +14,7 @@ import (
 
 type Config struct {
 	Name    string
+	Api     string
 	Basic   *Info
 	Session *mgo.Session
 	close   bool
@@ -48,7 +49,7 @@ type Info struct {
 	Secret string `bson:"secret"`
 }
 
-func NewConfig(dbname string) (c *Config, err error) {
+func NewConfig(dbname, api string) (c *Config, err error) {
 	sess, err := mgo.Dial("mongodb://localhost")
 	if err != nil {
 		return
@@ -59,6 +60,7 @@ func NewConfig(dbname string) (c *Config, err error) {
 	coll.Find(bson.M{"key": "config"}).One(&r)
 	c = &Config{
 		Name:    dbname,
+		Api:     api,
 		Basic:   &r,
 		Session: sess,
 		close:   false,

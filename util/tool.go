@@ -22,14 +22,14 @@ func Template(key string, m interface{}) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func StartWeb(port int, dbname string) {
+func StartWeb(port int, dbname string, api string) {
 	m := martini.Classic()
 	m.NotFound(Template("404.tpl", m))
 	m.Use(martini.Static("static", martini.StaticOptions{Prefix: "static"}))
 	m.Get("/", Template("index.tpl", m))
 
 	//Create new configuration
-	c, err := data.NewConfig(dbname)
+	c, err := data.NewConfig(dbname, api)
 	if port == 8080 {
 		c.Interval(30*time.Minute, data.Blog, data.Events)
 		c.Interval(24*time.Hour,
@@ -61,11 +61,13 @@ func StartWeb(port int, dbname string) {
 			w.ReplyText(txt)
 		}
 	})
+	wx.HandleFunc(weixin.MsgTypeEventSubscribe, func(w weixin.ResponseWriter, r *weixin.Request) {
+	})
 	//Create api route
-	m.Get("/api", func(w http.ResponseWriter, r *http.Request) {
+	m.Get("/"+c.Api, func(w http.ResponseWriter, r *http.Request) {
 		wx.ServeHTTP(w, r)
 	})
-	m.Post("/api", func(w http.ResponseWriter, r *http.Request) {
+	m.Post("/"+c.Api, func(w http.ResponseWriter, r *http.Request) {
 		wx.ServeHTTP(w, r)
 	})
 	err = http.ListenAndServe(":"+strconv.Itoa(port), m)

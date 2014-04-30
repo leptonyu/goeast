@@ -39,8 +39,8 @@
 			<p><h1>Welcome to <a href="http://www.goeastmandarin.com">GoEast Language Centers</a><h1></p>
 </div>
 </div>
-<script src="/static/jquery.min17ced3.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/show.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/jquery.min17ced3.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/show.js" type="text/javascript" charset="utf-8"></script>
 
 
 <img src="https://res.wx.qq.com/zh_CN/htmledition/images/spacer17ced3.gif" onerror="reLoadImg(this)" style="display:none"/>

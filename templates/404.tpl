@@ -32,9 +32,9 @@
     *********************
 -->
 
-<script src="/static/jquery-1.7.1.min.js"></script>
-<script src="/static/tabs.js"></script>
-<script src="/static/common.js"></script>
+<script src="/static/js/jquery-1.7.1.min.js"></script>
+<script src="/static/js/tabs.js"></script>
+<script src="/static/js/common.js"></script>
 
 <link rel="shortcut icon" href="/static/favicon.ico">
 <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">

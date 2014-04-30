@@ -77,4 +77,5 @@ do
 	else
 		echo Service $p is not started!
 	fi
+	sleep 1
 done

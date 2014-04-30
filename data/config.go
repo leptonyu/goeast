@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	Name    string
 	Basic   *Info
 	Session *mgo.Session
 	close   bool
@@ -47,16 +48,17 @@ type Info struct {
 	Secret string `bson:"secret"`
 }
 
-func NewConfig() (c *Config, err error) {
+func NewConfig(dbname string) (c *Config, err error) {
 	sess, err := mgo.Dial("mongodb://localhost")
 	if err != nil {
 		return
 	}
 	sess.SetSafe(&mgo.Safe{})
-	coll := sess.DB("goeast").C("config")
+	coll := sess.DB(dbname).C("config")
 	r := Info{}
 	coll.Find(bson.M{"key": "config"}).One(&r)
 	c = &Config{
+		Name:    dbname,
 		Basic:   &r,
 		Session: sess,
 		close:   false,
@@ -75,7 +77,7 @@ type Msg struct {
 }
 
 func (c *Config) fetch(key string) (r *Msg, err error) {
-	mes := c.Session.DB("goeast").C("message")
+	mes := c.Session.DB(c.Name).C("message")
 	r = &Msg{}
 	err = mes.Find(bson.M{"name": key}).One(&r)
 	if err != nil {
@@ -109,13 +111,13 @@ func (c *Config) update(key string) (r *Msg, err error) {
 	}
 	r = &Msg{Name: key,
 		Content: string(body)}
-	mes := c.Session.DB("goeast").C("message")
+	mes := c.Session.DB(c.Name).C("message")
 	err = mes.Insert(r)
 	return
 }
 
 func (c *Config) Save(r *weixin.Request) {
-	coll := c.Session.DB("goeast").C("user")
+	coll := c.Session.DB(c.Name).C("user")
 	coll.Insert(r)
 }
 

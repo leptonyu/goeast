@@ -22,14 +22,14 @@ func Template(key string, m interface{}) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func StartWeb(port int) {
+func StartWeb(port int, dbname string) {
 	m := martini.Classic()
 	m.NotFound(Template("404.tpl", m))
 	m.Use(martini.Static("static", martini.StaticOptions{Prefix: "static"}))
 	m.Get("/", Template("index.tpl", m))
 
 	//Create new configuration
-	c, err := data.NewConfig()
+	c, err := data.NewConfig(dbname)
 	if port == 8080 {
 		c.Interval(30*time.Minute, data.Blog, data.Events)
 		c.Interval(24*time.Hour,

@@ -1,4 +1,4 @@
-goeast
+GoEast WeChat App
 ======
 
-Secret
+It's a secret, so there is no READMEs.

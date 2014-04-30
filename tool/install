@@ -1,0 +1,36 @@
+#!/bin/sh
+PRG="$0"
+
+while [ -h "$PRG" ]; do
+	ls=`ls -ld "$PRG"`
+	link=`expr "$ls" : '.*-> \(.*\)$'`
+	if expr "$link" : '/.*' > /dev/null; then
+		PRG="$link"
+	else
+		PRG=`dirname "$PRG"`/"$link"
+	fi
+done
+
+PRGDIR=`dirname "$PRG"`
+PRGDIR=`cd $PRGDIR;pwd`
+
+if [ -z "$GOPATH" ]; then
+	echo GOPATH is not set!
+	exit 201
+fi
+
+if echo "$1" | grep -iqvE '^[a-z]{3,10}$'; then
+	if [ -z "$1" ]; then
+		echo 'Usage: install <appname>'
+		echo '	appname: script name used to install'
+	else
+		echo Invalid parameter "$1"
+	fi
+	exit 201
+fi
+if [ ! -e $PRGDIR/app ];then
+	echo "Shell $PRGDIR/app is not exist!"
+	exit 201
+fi
+rm -f $GOPATH/bin/$1
+ln -s $PRGDIR/app $GOPATH/bin/$1

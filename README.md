@@ -1,4 +1,0 @@
-goeast
-======
-
-Secret

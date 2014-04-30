@@ -1,0 +1,77 @@
+#!/bin/sh
+# resolve links - $0 may be a softlink
+PRG="$0"
+SRC=`dirname "$PRG"`
+SRC=`cd "$SRC";pwd`
+PRGNAME=`basename "$PRG"`
+
+while [ -h "$PRG" ]; do
+	ls=`ls -ld "$PRG"`
+	link=`expr "$ls" : '.*-> \(.*\)$'`
+	if expr "$link" : '/.*' > /dev/null; then
+		PRG="$link"
+	else
+		PRG=`dirname "$PRG"`/"$link"
+	fi
+done
+
+PRGDIR=`dirname "$PRG"`
+cd $PRGDIR/..
+
+PM=$1
+
+if [ -n "$PM" ]; then	
+	if echo "$PM" | grep -iqE '^stop$'; then
+		ps -ef | grep $PRGNAME | grep port | awk '{print $2}' | xargs kill
+		rm -vf $SRC/.port/*.pid
+		exit 0
+	elif echo "$PM" | grep -iqE '^status$'; then
+		ps -ef | grep $PRGNAME | grep port
+		exit 0
+	else
+		echo Unknown parameter "$PM"
+		exit 201
+	fi
+fi
+
+if [ ! -e main.go ]; then
+	echo can not find main.go!
+	exit 201
+fi
+
+port=$SRC/.port
+if [ ! -e $port ]; then
+	        mkdir -p $port
+	fi
+go build -o "$port/$PRGNAME" main.go
+
+if [ $? -ne 0 ]; then
+	echo build error! >&2
+	exit 201
+fi
+
+for p in 8080 8081 8082
+do
+	flg=$port/$p.pid
+	if [ -e $flg ]; then
+		echo Stopping service $p 
+		kill `head -1 $flg`
+		sleep 1
+		pid=`ps -ef | grep $PRGNAME | grep port=$p | awk '{print $2}'`
+		if [ -n "$pid" ]; then
+			echo Stop service $p error!
+		else
+			echo Stop service $p succeed!
+		fi
+		rm $flg
+	fi
+	echo Starting service $p
+	nohup $port/$PRGNAME -port=$p >> $port/$p.log 2>&1 &
+	pid=`ps -ef | grep $PRGNAME | grep port=$p | awk '{print $2}'`
+	if echo $pid | egrep -q '^[0-9]+$'; then
+		echo $pid > $flg
+		echo Service $p is started!
+	else
+		echo Service $p is not started!
+	fi
+done

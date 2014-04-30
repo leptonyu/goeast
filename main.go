@@ -16,5 +16,5 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
-	util.StartWeb(*port, *dbname)
+	util.StartWeb(*port, *dbname, *api)
 }

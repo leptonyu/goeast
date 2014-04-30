@@ -1,0 +1,761 @@
+/*
+* Skeleton V1.1
+* Copyright 2011, Dave Gamache
+* www.getskeleton.com
+* Free to use under the MIT license.
+* http://www.opensource.org/licenses/mit-license.php
+* 8/17/2011
+*/
+
+/* 
+	- Smashy Design / Version 2.0
+	- Built under Skeleton Style Framework
+	- Designed / Developed by : Lasitha Rajakaruna
+*/
+
+
+/* Table of Content
+==================================================
+	#Site Styles
+	#Page Styles
+	#Media Queries
+	#Font-Face */
+
+/* #Site Styles
+================================================== */
+
+/* #Page Styles
+================================================== */
+
+/*
+	- Home Page Styles
+	- Structural Only
+*/
+
+	header{
+		height:160px;
+		width:100%;
+		position:relative;
+		overflow:hidden;
+	}
+		nav{
+			text-align:right;	
+			padding-top:75px;
+		}
+		nav ul li{
+			padding:0 25px;
+			display:inline;
+			text-transform:uppercase;
+			text-decoration:none;
+			font-family: 'MyriadProLightRegular', Tahoma, Geneva, sans-serif;
+			font-size:16px;
+		}
+			nav ul li a{
+				text-decoration:none;
+				color:#404040;
+			}
+			nav ul li.current-menu-item a{
+				color:#8e8d8d;
+				font-family: 'MyriadProLightBold', Tahoma, Geneva, sans-serif;	
+			}
+			
+			nav ul li a:hover{
+				text-decoration:none;
+				color:#8e8d8d;
+			}	
+		nav ul li:last-child{
+			padding-right:0px;	
+		}
+	
+	/* Home Featured Section */
+	#home_featured_section{
+		width:100%;
+		height:440px;
+		background:url(../images/home_grey_noise.jpg) repeat-x;	
+		padding-top:60px;
+		border-bottom:1px solid #ccc;
+	}
+		#home_featured_section .featured_section{
+			text-align: center;	
+			color:#8a8888;
+		}
+			#home_featured_section .featured_section .featured_icon{
+				width:150px;
+				height:150px;
+				display:block;
+				background:url(../images/home_design_sprite.png) 0 0 no-repeat;
+				margin:auto;
+				margin-bottom:10px;
+			}
+				#home_featured_section .featured_section a.design:hover{
+					background-position:0 -150px;
+				}
+				
+				#home_featured_section .featured_section a.development{
+					background-position:-150px 0px;
+				}
+				#home_featured_section .featured_section a.development:hover{
+					background-position:-150px -150px;
+				}
+				
+				#home_featured_section .featured_section a.responsive{
+					background-position:-300px 0px;
+				}
+				#home_featured_section .featured_section a.responsive:hover{
+					background-position:-300px -150px;
+				}
+			#home_featured_section .featured_section .featured_title{
+				font-family: 'MyriadProLightRegular',Arial;
+				text-transform:uppercase;
+				font-size:18px;
+				color:#1d1d1b;
+			}
+			#home_featured_section .featured_section .featured_content{
+				font-family: Tahoma, Geneva, sans-serif;
+				/*text-transform:uppercase;*/
+				font-size:13px;
+				padding:10px;
+				margin-bottom:10px;
+			}
+		#home_featured_section .featured_section .hover_featured_option{
+			margin:0 5px;
+			line-height:1px;	
+		}
+		.featured_tool_tip{
+			width:115px;
+			height:30px;
+			background:url(../images/featured_tool_tip_bg.gif) no-repeat;
+			position:absolute;
+			display:none;
+			text-align:center;
+			padding-top:10px;
+			color:#cccccc;
+			font-size:11px;
+			/*-webkit-box-shadow: 1px 1px 1px 0px ;
+			box-shadow: 1px 1px 1px 0px ; */
+		}
+	.header_bottom_shadow{
+		width:100%;
+		height:30px;
+		background:url(../images/header_bottom_shadow.jpg) no-repeat center;	
+	}
+	/* Home Bottom Section */
+	.general_content_holder{
+		width:100%;
+		min-height:140px;
+		padding-top:30px;
+	}
+		.general_content_holder .container{			border-bottom:1px solid #e6e6e6;
+			padding-bottom:30px;	
+		}
+			.general_content_holder .container a.bottom_contaner_link{
+				color:#424242;
+				text-decoration:none;
+				font-size:11px;
+			}
+				.general_content_holder .container a.bottom_contaner_link:hover{
+					color:#424242;
+					text-decoration:underline;
+					font-size:11px;
+				}
+			.general_content_holder .container h1{
+				font-family: 'MyriadProLightRegular';
+				font-size:20px;
+				color:#424242;
+				line-height:1;
+				margin-bottom:5px;
+				text-transform:uppercase;
+			}
+				.general_content_holder .container h1 span{
+					font-family: 'MyriadProLightBold';
+				}
+			.general_content_holder .container h2{
+				font-family: 'MyriadProLightRegular';
+				font-size:20px;
+				color:#545454;
+				line-height:1;
+				margin-bottom:5px;
+			}
+			
+			.general_content_holder .container h3{
+				font-family: 'MyriadProLightRegular';
+				font-size:18px;
+				color:#545454;
+				line-height:1;
+				margin-bottom:5px;
+			}
+			.general_content_holder .container p{
+				font-size:12px;
+				color:#6d6d6d;
+				line-height:2;
+			}
+				.general_content_holder .container p strong{
+					font-family: 'MyriadProLightBold';
+					color:#515151;		
+				}
+			.general_content_holder .container .post_meta{
+				font-size:10px;
+				color:#a4a4a4;				
+			}
+		
+		.portfolio_items li{
+			width:210px;
+			height:125px;
+			 -moz-border-radius: 5px;
+			-webkit-border-radius: 5px;
+			-khtml-border-radius: 5px;
+			border-radius: 5px;
+			
+			-moz-box-shadow: 2px 2px 2px #ccc;
+			-webkit-box-shadow: 2px 2px 2px #ccc;
+			box-shadow: 2px 2px 2px #ccc;
+
+			position:relative;
+			overflow:hidden;
+			z-index:1;
+			float:left;
+			
+			margin:0 11px;
+		}
+		.portfolio_items li a{
+			display:block;	
+		}
+		.portfolio_items li img{
+			position:relative;
+			z-index:-1;	
+		}
+		.portfolio_items li .mouseover_caption{
+			width:210px;
+			height:75px;
+			padding-top:50px;
+			background:#000;
+			position:absolute;
+			top:125px;
+			left:0px;
+			text-align:center;
+			color:#fff;
+			font-size:11px;
+			opacity:0.7;
+			filter: alpha(opacity=70);
+			-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
+		}
+			.portfolio_items li .mouseover_caption strong{
+				color:#fff;	
+			}
+		.portfolio_items li:first-child, .portfolio_items li:last-child{
+			/* margin:0px !important;	*/
+		}
+	footer{
+		width:100%;
+		height:160px;
+		background:	url(../images/footer_bg.jpg) repeat-x;
+		padding-top:65px;
+		text-align:center;
+		color:#1a1a1c;
+		line-height:1.3;
+		font-size:11px;
+	}
+	.four.columns{
+		margin-bottom:20px;	
+	}
+.container ul li{
+ font-size:13px;
+ color:#6d6d6d;
+ list-style:disc;
+margin-left:15px;
+}
+/*
+	- About Page Styles
+	- Structural Only
+*/
+
+#mini_featured_section{
+	width:100%;
+	height:70px;
+	background:url(../images/home_grey_noise.jpg) repeat-x;	
+	padding-top:40px;
+	border-bottom:1px solid #ccc;
+}
+	#mini_featured_section h1{
+		font-family: 'MyriadProLightRegular';
+		font-size:30px;
+		color:#424242;
+		line-height:1;
+		margin-bottom:5px;
+		text-transform:uppercase;
+	}
+		#mini_featured_section .container h1 span{
+			font-family: 'MyriadProLightBold';
+		}
+	.twitter_feed{
+		background:url(../images/twitter-bird.gif) left top no-repeat;	
+		padding-top:7px;
+	}
+		.twitter_feed_data{
+			font-size:12px;
+			margin-left:69px;
+			padding:10px;
+			color:#fff;
+			background-color:#4bc2f1;
+			
+			 -moz-border-radius: 5px;
+			-webkit-border-radius: 5px;
+			-khtml-border-radius: 5px;
+			border-radius: 5px;
+		}	
+/*
+	- What I do Page Styles
+	- Structural Only
+*/	
+	.work_process p{
+		font-size:11.5px !important;
+		padding:5px;	
+	}
+	.work_process h2{
+		text-transform:uppercase;
+		font-size:16px !important; 	
+		margin:10px 0;
+	}
+	
+	.work_process_holder{
+		width:900px !important;
+	}
+/*
+	- What I do Page Styles
+	- Structural Only
+*/
+a{
+	text-decoration:none;	
+}
+a:hover{
+	text-decoration:underline;
+}
+	a.read_more{
+		width:80px;
+		background:#dbdbdb;
+		padding:2px 5px;
+		color:#333;	
+		font-size:12px;
+		text-decoration:none;
+		-moz-border-radius: 3px;
+		-webkit-border-radius: 3px;
+		-khtml-border-radius: 3px;
+		border-radius: 3px;
+		display:block;
+		text-align:center;
+	}
+	a.read_more:hover{
+		background:#333;
+		color:#fff;
+	}
+.more_posts{
+	/*width:220px;
+	text-align:center;
+	margin:auto;*/
+}
+	.more_posts a{
+		padding:2px 5px;
+		color:#333;	
+		font-size:12px;
+		text-decoration:none;
+		display:block;
+		text-align:left;
+		float:left; margin-right:20px;
+		text-transform:uppercase;
+		font-family: 'MyriadProLightRegular';
+		font-size:24px;
+		float:left;
+	}
+	.more_posts a:hover{
+		text-decoration:underline;
+	}
+
+/*
+	- Portfolio Page Styles
+	- Structural Only
+*/
+
+.portfolio_content_holder{
+	width:100%;
+	min-height:140px;
+	padding-top:30px;
+}
+	.portfolio_item_container{
+		width:300px;
+		height:190px;
+	}
+	.portfolio_item_container img{
+		position:relative;
+		z-index:-1;	
+	}
+	.portfolio_plus_icon{
+		width:250px;
+		height:70px;
+		top:190px;
+		left:0px;
+		color:#fff;
+		text-align:center;
+		line-height:1.5;
+		padding:120px 25px 0 25px;
+		font-size:12px;
+		position:absolute;
+		background:url(../images/portfolio-plus-icon.png) center center no-repeat #000;
+		opacity:0.7;
+		filter: alpha(opacity=70);
+		-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
+		z-index:-1;
+	}
+	.portfolio_plus_icon strong{
+		color:#fff;	
+	}
+	a.portfolio_item_holder{
+		width:290px;
+		height:180px;
+		border:5px solid #e5e5e5;
+		 -moz-border-radius: 15px;
+		-webkit-border-radius: 15px;
+		-khtml-border-radius: 15px;
+		border-radius: 15px;
+
+		position:relative;
+		overflow:hidden;
+		display:block;
+		float:left;
+		
+	}
+		a.portfolio_item_holder:hover{
+			border-color:#ffe30c;
+		}
+	.portfolio_shadow{
+		width:250px;
+		height:30px;
+		margin:auto;
+		background:url(../images/portfolio-item-shadow.jpg) center top	no-repeat;
+	}
+
+
+
+/*
+	- Portfolio Page Styles
+	- Structural Only
+*/
+
+.say_hello{
+	/*width:217px;
+	height:144px;
+	background:url(../images/say-hello.png) no-repeat center;
+	position:absolute;
+	top:-90px;*/
+}
+
+	.contact_content h1{
+		font-family: 'MyriadProLightRegular';
+		font-size:24px;
+		color:#424242;
+		line-height:1;
+		margin-bottom:20px;
+		text-transform:uppercase;
+	}
+		.contact_content h1 span{
+			font-family: 'MyriadProLightBold';
+		}
+	.input_feilds input[type="text"], .input_feilds select, .input_feilds textarea, .comment_section input[type="text"], .comment_section select, .comment_section textarea{
+		border:5px solid #f1f1f1;
+		
+		-moz-border-radius: 10px;
+		-webkit-border-radius: 10px;
+		-khtml-border-radius: 10px;
+		border-radius: 10px;
+	}
+		.input_feilds input[type="text"]:focus, .input_feilds textarea:focus, .input_feilds select:focus,  .comment_section input[type="text"]:focus, .comment_section select, .comment_section textarea:focus{
+			border:5px solid #00a9eb;
+			
+			-moz-border-radius: 10px;
+			-webkit-border-radius: 10px;
+			-khtml-border-radius: 10px;
+			border-radius: 10px;
+		}
+		
+	.input_feilds select{
+		padding:5px;	
+		width:82%;
+		outline:none;
+	}
+	
+	.input_feilds textarea{
+		padding:5px;	
+		width:88%;
+	}
+	.input_feilds input[type="button"]{
+		width:146px;
+		height:48px;
+		background:url(../images/btn_submit.gif) no-repeat ;
+		border:0px;
+	}
+.get_connected{
+	width:200px;
+	height:100px;
+	clear:both;
+	text-align:center;
+	position:relative;
+	top:30px;
+}
+	.get_connected h1{
+		color:#8c8c8c;	
+	}
+.connect{
+	width:66px;
+	height:65px;
+	background:url(../images/get_connected.png) no-repeat;
+	display:block;
+	float:left;
+}
+	a.dribble{
+		background-position:0 0;	
+	}
+	a.dribble:hover{
+		background-position:0 -65px;	
+	}
+	
+	a.twitter{
+		background-position:-64px 0;	
+	}
+	a.twitter:hover{
+		background-position:-64px -65px;	
+	}
+	
+	a.facebook{
+		background-position:-128px 0;	
+	}
+	a.facebook:hover{
+		background-position:-128px -65px;	
+	}
+/* #Media Queries
+================================================== */
+
+	/* Smaller than standard 960 (devices and browsers) */
+	@media only screen and (max-width: 959px) {}
+
+	/* Tablet Portrait size to standard 960 (devices and browsers) */
+	@media only screen and (min-width: 768px) and (max-width: 959px) {
+		.portfolio_item_container{
+			height:150px;	
+		}
+		a.portfolio_item_holder{
+			width:226px;
+			height:140px;
+			border:5px solid #e5e5e5;
+		}	
+
+		a.portfolio_item_holder:hover{
+			border-color:#ffe30c;
+		}
+			.portfolio_plus_icon{
+				width:180px;
+				height:50px;
+				padding: 95px 25px 0;
+				line-height:3;
+			}
+		.portfolio_shadow{
+			background-image:url(../images/portfolio-item-shadow_small.gif);	
+		}
+		
+		.input_feilds input[type="text"]{
+			width:200px;	
+		}
+		.input_feilds  textarea{
+			width:440px;	
+		}
+		.input_feilds select{
+			width:220px;	
+		}
+		
+		.work_process_holder{
+			width:720px !important;
+		}
+
+		.portfolio_items li{
+			width:250px;
+			height:150px;
+			margin-bottom:20px;
+		}
+		.portfolio_items li:last-child{
+			display:none;	
+		}
+		.portfolio_items li .mouseover_caption{
+			width:250px;
+			height:80px;
+			padding-top:70px;
+			top:195px;	
+		}
+	}
+
+	/* All Mobile Sizes (devices and browser) */
+	@media only screen and (max-width: 767px) {
+		.portfolio_item_container{
+			width:300px;
+			margin:auto;
+		}	
+		
+		.input_feilds input[type="text"], .input_feilds  textarea{
+			width:200px;	
+		}
+		.input_feilds select{
+			width:220px;	
+		}
+
+	}
+
+	/* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+	@media only screen and (min-width: 480px) and (max-width: 767px) {
+		#smashy_design_logo{
+			width:100px;	
+		}
+		#navigation{
+			width:320px;
+		}
+			#navigation nav {
+				padding-top:15px;	
+			}
+			#navigation nav ul li {
+				display:block;	
+				padding-right:0px;
+			}
+		.input_feilds input[type="text"], .input_feilds  textarea{
+			width:380px;	
+		}
+		.input_feilds select{
+			width:400px;	
+		}
+		#home_featured_section{
+			height:1050px;	
+		}
+		
+		.work_process_holder{
+			width:420px !important;
+		}
+		
+		.portfolio_items{
+			width:300px;
+			margin:auto;	
+		}
+		.portfolio_items li{
+			float:none;
+			width:300px;
+			height:175px;	
+			margin-bottom:20px;
+		}
+		.portfolio_items li .mouseover_caption{
+			width:300px;
+			height:105px;
+			padding-top:70px;
+			top:195px;	
+		}
+		
+		.post_image_holder{
+			text-align:center;	
+		}
+		
+		.hover_featured_option{
+			display:none;	
+		}
+		.notification{
+			width:395px !important;
+			margin:0px !important;
+		}
+	}
+
+	/* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
+	@media only screen and (max-width: 479px) {
+		#smashy_design_logo{
+			width:100px;	
+		}
+		#navigation{
+			width:200px;
+		}
+			#navigation nav {
+				padding-top:15px;	
+			}
+			#navigation nav ul li {
+				display:block;	
+				padding-right:0px;
+			}
+		
+		.input_feilds input[type="text"], .input_feilds  textarea{
+			width:280px;	
+		}
+		.input_feilds select{
+			width:400px;	
+		}
+		
+		#home_featured_section{
+			height:1150px;	
+		}
+		
+		.work_process_holder{
+			width:300px !important;
+		}
+		
+		.portfolio_items{
+			width:210px;
+			margin:auto;	
+		}
+		.portfolio_items li{
+			float:none;
+			margin-bottom:20px;
+		}
+		.portfolio_items li .mouseover_caption{
+			
+		}
+		.post_image_holder{
+			text-align:center;	
+		}
+		
+		.hover_featured_option{
+			display:none;	
+		}
+		.notification{
+			width:100% !important;
+		}
+	}
+.csswinner{
+	position:absolute;
+	top:300px;
+	left:0px;
+	z-index:999;
+}
+.csswinner a{
+	width:81px;
+	height:59px;
+	text-indent:-9000px;
+	display:block;
+	background:url(../images/nominee-black-left.png) no-repeat;
+}
+
+
+/* #Font-Face
+================================================== */
+/* 	This is the proper syntax for an @font-face file
+		Just create a "fonts" folder at the root,
+		copy your FontName into code below and remove
+		comment brackets */
+
+	@font-face {
+	    font-family: 'MyriadProLightBold';
+	    src: url('../fonts/myriadpro-semibold-webfont.eot');
+	    src: url('../fonts/myriadpro-semibold-webfont.eot?iefix') format('eot'),
+	         url('../fonts/myriadpro-semibold-webfont.woff') format('woff'),
+	         url('../fonts/myriadpro-semibold-webfont.ttf') format('truetype'),
+	         url('../fonts/myriadpro-semibold-webfont.svg#webfontZam02nTh') format('svg');
+	    font-weight: normal;
+	    font-style: normal; }
+		
+	@font-face {
+	    font-family: 'MyriadProLightRegular';
+	    src: url('../fonts/myriadpro-light-webfont.eot');
+	    src: url('../fonts/myriadpro-light-webfont.eot?iefix') format('eot'),
+	         url('../fonts/myriadpro-light-webfont.woff') format('woff'),
+	         url('../fonts/myriadpro-light-webfont.ttf') format('truetype'),
+	         url('../fonts/myriadpro-light-webfont.svg#webfontZam02nTh') format('svg');
+	    font-weight: normal;
+	    font-style: normal; }

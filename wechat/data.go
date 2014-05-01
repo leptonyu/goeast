@@ -120,6 +120,8 @@ func createAccessToken(c chan accessToken, appid string, secret string) {
 	}
 }
 
+//Check signature of wechat server
+// t
 func checkSignature(t string, w http.ResponseWriter, r *http.Request) bool {
 	r.ParseForm()
 	var signature string = r.FormValue("signature")

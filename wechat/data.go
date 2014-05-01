@@ -1,7 +1,13 @@
 package wechat
 
 import (
+	"crypto/sha1"
+	"encoding/json"
 	"encoding/xml"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"time"
 )
 
@@ -82,15 +88,138 @@ type Request struct {
 	Recognition  string  `json:",omitempty"`
 }
 
-func authAccessToken(appid string, secret string) (string, time.Duration) {
+//Access Token struct
+type AccessToken struct {
+	accesstoken string    //WeChat access token
+	expire      time.Time //expire time
+}
+
+//Method to store and create access token
+type AccessTokenReaderWriter interface {
+	//Read access token
+	Read() (*AccessToken, error)
+	//Write access token
+	Write(*AccessToken) error
+}
+
+//WeChat Struct
+type WeChat struct {
+	appid  string
+	secret string
+	token  string
+	atrw   AccessTokenReaderWriter
+	routes []*route
+}
+
+// Use to output reply
+type ResponseWriter interface {
+	// Get weixin
+	GetWeChat() *WeChat
+	GetUserData() interface{}
+	// Reply message
+	ReplyText(text string)
+	ReplyImage(mediaId string)
+	ReplyVoice(mediaId string)
+	ReplyVideo(mediaId string, title string, description string)
+	ReplyMusic(music *Music)
+	ReplyNews(articles []Article)
+	// Post message
+	PostText(text string) error
+	PostImage(mediaId string) error
+	PostVoice(mediaId string) error
+	PostVideo(mediaId string, title string, description string) error
+	PostMusic(music *Music) error
+	PostNews(articles []Article) error
+	// Media operator
+	UploadMediaFromFile(mediaType string, filepath string) (string, error)
+	DownloadMediaToFile(mediaId string, filepath string) error
+	UploadMedia(mediaType string, filename string, reader io.Reader) (string, error)
+	DownloadMedia(mediaId string, writer io.Writer) error
+}
+
+// Post text message
+func (wc *WeChat) PostText(touser string, text string) error {
+	var msg struct {
+		ToUser  string `json:"touser"`
+		MsgType string `json:"msgtype"`
+		Text    struct {
+			Content string `json:"content"`
+		} `json:"text"`
+	}
+	msg.ToUser = touser
+	msg.MsgType = "text"
+	msg.Text.Content = text
+	return postMessage(wx.tokenChan, &msg)
+}
+
+// Callback function
+type HandlerFunc func(ResponseWriter, *Request)
+
+type route struct {
+	regex   *regexp.Regexp
+	handler HandlerFunc
+}
+
+//Create WeChat Object
+func New(appid, secret, token string, atrw AccessTokenReaderWriter) (wc *WeChat, err error) {
+	wc = &WeChat{}
+	wc.appid = appid
+	wc.secret = secret
+	wc.token = token
+	wc.atrw = atrw
+	_, err = wc.getAccessToken()
+	if err == nil {
+		log.Logger.Println("Get token")
+	}
+	return
+}
+
+// Register request callback.
+func (wc *WeChat) HandleFunc(pattern string, handler HandlerFunc) {
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		panic(err)
+		return
+	}
+	route := &route{regex, handler}
+	wc.routes = append(wc.routes, route)
+}
+
+func (wc *WeChat) getAccessToken() (token string, err error) {
+	for i := 1; i <= retryMaxN; i++ {
+		t, err := wc.atrw.Read()
+		if err == nil {
+			if time.Since(t.expire).Seconds() >= 0 {
+				t, err = authAccessToken(wc.appid, wc.secret)
+				if err != nil {
+					continue
+				} else {
+					err = wc.atrw.Write(t)
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+			}
+			token = t.accesstoken
+			return
+		}
+	}
+	err = errors.New("Cannot get Access Token")
+	return
+}
+
+//Get accesstoken from wechat.
+func authAccessToken(appid string, secret string) (token *AccessToken, err error) {
 	resp, err := http.Get(weixinHost + "/token?grant_type=client_credential&appid=" + appid + "&secret=" + secret)
 	if err != nil {
 		log.Println("Get access token failed: ", err)
+		return
 	} else {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Println("Read access token failed: ", err)
+			return
 		} else {
 			var res struct {
 				AccessToken string `json:"access_token"`
@@ -98,36 +227,77 @@ func authAccessToken(appid string, secret string) (string, time.Duration) {
 			}
 			if err := json.Unmarshal(body, &res); err != nil {
 				log.Println("Parse access token failed: ", err)
+				return
 			} else {
 				//log.Printf("AuthAccessToken token=%s expires_in=%d", res.AccessToken, res.ExpiresIn)
-				return res.AccessToken, time.Duration(res.ExpiresIn * 1000 * 1000 * 1000)
+				token = &AccessToken{
+					accesstoken: res.AccessToken,
+					expire:      time.Now().Add(time.Duration((res.ExpiresIn - 100) * 1000 * 1000 * 1000)),
+				}
+				return
 			}
 		}
 	}
-	return "", 0
 }
 
-func createAccessToken(c chan accessToken, appid string, secret string) {
-	token := accessToken{"", time.Now()}
-	c <- token
-	for {
-		if time.Since(token.expires).Seconds() >= 0 {
-			var expires time.Duration
-			token.token, expires = authAccessToken(appid, secret)
-			token.expires = time.Now().Add(expires)
-		}
-		c <- token
+//Http Respond, Main method
+func (wc *WeChat) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !checkSignature(wc.token, w, r) {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
 	}
+	// Verify request
+	if r.Method == "GET" {
+		fmt.Fprintf(w, r.FormValue("echostr"))
+		return
+	}
+	// Process message
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("WeChat receive message failed:", err)
+		http.Error(w, "", http.StatusBadRequest)
+	} else {
+		var msg Request
+		if err := xml.Unmarshal(data, &msg); err != nil {
+			log.Println("WeChat parse message failed:", err)
+			http.Error(w, "", http.StatusBadRequest)
+		} else {
+			requestPath := msg.MsgType
+			if requestPath == msgEvent {
+				requestPath += "." + msg.Event
+			}
+			for _, route := range wc.routes {
+				if !route.regex.MatchString(requestPath) {
+					continue
+				}
+				writer := responseWriter{}
+				writer.wc = wc
+				writer.writer = w
+				writer.toUserName = msg.FromUserName
+				writer.fromUserName = msg.ToUserName
+				route.handler(writer, &msg)
+				return
+			}
+			http.Error(w, "", http.StatusNotFound)
+		}
+	}
+}
+
+type responseWriter struct {
+	wc           *WeChat
+	writer       http.ResponseWriter
+	toUserName   string
+	fromUserName string
 }
 
 //Check signature of wechat server
 // t
-func checkSignature(t string, w http.ResponseWriter, r *http.Request) bool {
+func checkSignature(token string, w http.ResponseWriter, r *http.Request) bool {
 	r.ParseForm()
 	var signature string = r.FormValue("signature")
 	var timestamp string = r.FormValue("timestamp")
 	var nonce string = r.FormValue("nonce")
-	strs := sort.StringSlice{t, timestamp, nonce}
+	strs := sort.StringSlice{token, timestamp, nonce}
 	sort.Strings(strs)
 	var str string
 	for _, s := range strs {
@@ -136,4 +306,13 @@ func checkSignature(t string, w http.ResponseWriter, r *http.Request) bool {
 	h := sha1.New()
 	h.Write([]byte(str))
 	return fmt.Sprintf("%x", h.Sum(nil)) == signature
+}
+
+func postMessage(c chan accessToken, msg interface{}) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	_, err = postRequest(weixinHost+"/message/custom/send?access_token=", c, data)
+	return err
 }

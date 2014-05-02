@@ -54,6 +54,24 @@ func New(appid, secret, token string, atrw AccessTokenReaderWriter) (*WeChat, er
 	return wc, nil
 }
 
+func (wc *WeChat) UpdateAccessToken() (*AccessToken, error) {
+	at, err := wc.atrw.Read()
+	if err == nil && time.Since(at.ExpireTime).Seconds()+100 < 0 {
+		return at, nil
+	}
+	t, err := fetchAccessToken(wc.appid, wc.secret)
+	if err != nil {
+		return nil, err
+	} else {
+		err = wc.atrw.Write(t)
+		if err != nil {
+			return nil, err
+		} else {
+			return t, nil
+		}
+	}
+}
+
 //Get Access Token retry three times
 func (wc *WeChat) getAccessToken() (string, error) {
 	for i := 1; i <= wc.retry; i++ {
@@ -66,7 +84,7 @@ func (wc *WeChat) getAccessToken() (string, error) {
 				} else {
 					err = wc.atrw.Write(t)
 					if err != nil {
-						log.Fatal(err)
+						return "", err
 					}
 				}
 			}

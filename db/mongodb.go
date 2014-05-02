@@ -31,8 +31,10 @@ func NewDBConfig(dbname string) *DBConfig {
 	}
 }
 
+type QueryFunc func(*mgo.Database) (interface{}, error)
+
 // One query on one connection.
-func (c *DBConfig) Query(f func(*mgo.Database) (interface{}, error)) (data interface{}, err error) {
+func (c *DBConfig) Query(f QueryFunc) (data interface{}, err error) {
 	session, err := mgo.Dial(c.DBUrl)
 	if err != nil {
 		return
@@ -80,4 +82,20 @@ func (c *DBConfig) Write(at *wechat.AccessToken) error {
 	})
 	return err
 
+}
+
+func (c *DBConfig) CreateWeChat(dbname, api string) (*wechat.WeChat, error) {
+	xx := struct {
+		appid  string
+		secret string
+		token  string
+	}{}
+	_, err := c.Query(func(database *mgo.Database) (interface{}, error) {
+		err := database.C("wechat").Find(bson.M{"name": "wechat"}).One(&xx)
+		return xx, err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return wechat.New(xx.appid, xx.secret, xx.token, c)
 }

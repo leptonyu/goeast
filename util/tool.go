@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/leptonyu/goeast/db"
-	"github.com/leptonyu/goeast/handler"
 	"github.com/leptonyu/goeast/wechat"
 	"html/template"
 	"net/http"
@@ -54,7 +53,7 @@ func StartWeb(port int, dbname string, api string) {
 		}()
 		f := func(wait time.Duration, keys ...string) {
 			if len(keys) > 0 {
-				for !c.close {
+				for {
 					time.Sleep(wait)
 					for _, v := range keys {
 						config.Update(v)
@@ -62,17 +61,17 @@ func StartWeb(port int, dbname string, api string) {
 				}
 			}
 		}
-		go f(30*time.Minute, data.Blog, data.Events)
+		go f(30*time.Minute, db.Blog, db.Events)
 		go f(24*time.Hour,
-			data.Home,
-			data.Campus,
-			data.Contact,
-			data.Galleries,
-			data.One2one,
-			data.Online,
-			data.Onsite,
-			data.Teachers,
-			data.Testimonials)
+			db.Home,
+			db.Campus,
+			db.Contact,
+			db.Galleries,
+			db.One2one,
+			db.Online,
+			db.Onsite,
+			db.Teachers,
+			db.Testimonials)
 	}
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) {
 		txt := r.Content

@@ -35,3 +35,13 @@ func TestA(t *testing.T) {
 		t.Log(d)
 	}
 }
+
+func TestB(t *testing.T) {
+	abc := NewDBConfig("test")
+	x, err := abc.Read()
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Log(x)
+	}
+}

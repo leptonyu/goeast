@@ -1,9 +1,11 @@
 package db
 
 import (
+	"github.com/leptonyu/goeast/wechat"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"testing"
+	"time"
 )
 
 type dd struct {
@@ -42,15 +44,15 @@ func TestB(t *testing.T) {
 		Token:      "this is token",
 		ExpireTime: time.Now(),
 	}
-	err = abc.Write(x)
+	err := abc.Write(x)
 	if err != nil {
 		t.Error(err)
 	}
-	y,err:=abc.Read()
-	if err!=nil{
+	y, err := abc.Read()
+	if err != nil {
 		t.Error(err)
 	}
-	if x.Token!=y.Token{
-		t.Error("Token is not same!"))
+	if x.Token != y.Token {
+		t.Error("Token is not same!")
 	}
 }

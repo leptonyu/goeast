@@ -8,6 +8,7 @@ import (
 	"github.com/leptonyu/goeast/wechat"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"log"
 )
 
 //MongoDB configuration
@@ -87,12 +88,15 @@ func (c *DBConfig) Write(at *wechat.AccessToken) error {
 
 }
 
+type storeWeChat struct {
+	Name   string
+	Appid  string
+	Secret string
+	Token  string
+}
+
 func (c *DBConfig) CreateWeChat() (*wechat.WeChat, error) {
-	xx := struct {
-		appid  string
-		secret string
-		token  string
-	}{}
+	xx := storeWeChat{}
 	_, err := c.Query(func(database *mgo.Database) (interface{}, error) {
 		err := database.C("wechat").Find(bson.M{"name": "wechat"}).One(&xx)
 		return xx, err
@@ -100,20 +104,22 @@ func (c *DBConfig) CreateWeChat() (*wechat.WeChat, error) {
 	if err != nil {
 		return nil, err
 	}
-	return wechat.New(xx.appid, xx.secret, xx.token, c)
+	return wechat.New(xx.Appid, xx.Secret, xx.Token, c)
 }
 
 func (c *DBConfig) Init(appid, secret, token string) error {
-	xx := struct {
-		appid  string
-		secret string
-		token  string
-	}{}
-	xx.appid = appid
-	xx.secret = secret
-	xx.token = token
+	xx := storeWeChat{}
+	xx.Name = "wechat"
+	xx.Appid = appid
+	xx.Secret = secret
+	xx.Token = token
 	_, err := c.Query(func(database *mgo.Database) (interface{}, error) {
-		return database.C("wechat").Upsert(bson.M{"name": "wechat"}, &xx)
+		return database.C("wechat").Upsert(bson.M{"name": "wechat"}, xx)
 	})
+	if err == nil {
+		log.Println("Set appid as " + appid)
+		log.Println("Set secret as " + secret)
+		log.Println("Set token as " + token)
+	}
 	return err
 }

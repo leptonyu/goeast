@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/leptonyu/goeast/db"
 	"github.com/leptonyu/goeast/util"
+	"log"
 	"os"
 )
 
@@ -22,7 +23,10 @@ func main() {
 	}
 	config := db.NewDBConfig(*api)
 	if *init {
-		config.Init(*appid, *secret, *token)
+		err := config.Init(*appid, *secret, *token)
+		if err != nil {
+			log.Panicln(err)
+		}
 		os.Exit(0)
 	}
 	util.StartWeb(*port, config)

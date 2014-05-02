@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -35,7 +34,10 @@ func StartWeb(port int, dbname string, api string) {
 		go func() {
 			for {
 				a, err := wc.UpdateAccessToken()
-				time.Sleep((-1 * time.Since(a.ExpireTime).Seconds()) + time.Second)
+				if err != nil {
+					panic(err)
+				}
+				time.Sleep((-1 * time.Duration(time.Since(a.ExpireTime).Seconds())))
 			}
 		}()
 		f := func(wait time.Duration, keys ...string) {
@@ -60,26 +62,21 @@ func StartWeb(port int, dbname string, api string) {
 			db.Teachers,
 			db.Testimonials)
 	}
-	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) {
+	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.Content
-		sig := strings.ToLower(txt)
-		v, ok := mr[sig]
-		if ok {
-			v(w, c)
-		} else {
-			w.ReplyText(txt)
-		}
+		//sig := strings.ToLower(txt)
+		w.ReplyText(txt)
+		return nil
 	})
 	//Create api route
 	ff := wc.CreateHandlerFunc()
-	m.Get("/"+c.Api, ff)
-	m.Post("/"+c.Api, ff)
+	m.Get("/"+api, ff)
+	m.Post("/"+api, ff)
 	err = http.ListenAndServe(":"+strconv.Itoa(port), m)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	fmt.Println("stop!")
-	c.Session.Close()
 	os.Exit(0)
 }

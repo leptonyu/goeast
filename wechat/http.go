@@ -121,7 +121,7 @@ func (wc *WeChat) HttpHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 // Create handler func
-func (wc *WeChat) CreateHandlerFunc(w http.ResponseWriter, r *http.Request) http.HandlerFunc {
+func (wc *WeChat) CreateHandlerFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		wc.HttpHandle(w, r)
 	}

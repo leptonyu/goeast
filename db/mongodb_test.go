@@ -38,10 +38,19 @@ func TestA(t *testing.T) {
 
 func TestB(t *testing.T) {
 	abc := NewDBConfig("test")
-	x, err := abc.Read()
+	x := &wechat.AccessToken{
+		Token:      "this is token",
+		ExpireTime: time.Now(),
+	}
+	err = abc.Write(x)
 	if err != nil {
 		t.Error(err)
-	} else {
-		t.Log(x)
+	}
+	y,err:=abc.Read()
+	if err!=nil{
+		t.Error(err)
+	}
+	if x.Token!=y.Token{
+		t.Error("Token is not same!"))
 	}
 }

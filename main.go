@@ -9,8 +9,7 @@ import (
 
 func main() {
 	port := flag.Int("port", 8080, "Web service port")
-	dbname := flag.String("dbname", "goeast", "MongoDB name")
-	api := flag.String("api", "api", "http://localhost/$api")
+	api := flag.String("api", "api", "http://localhost/$api, Also use as database name with prefix wechat_")
 	appid := flag.String("appid", "", "App id")
 	secret := flag.String("secret", "", "App secret")
 	token := flag.String("token", "", "Token")

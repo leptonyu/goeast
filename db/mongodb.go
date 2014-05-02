@@ -110,10 +110,7 @@ func (c *DBConfig) Init(appid, secret, token string) error {
 	xx.secret = secret
 	xx.token = token
 	_, err := c.Query(func(database *mgo.Database) (interface{}, error) {
-		_, err := database.C("wechat").Upsert(bson.M{"name": "wechat"}, &xx)
-		return err
+		return database.C("wechat").Upsert(bson.M{"name": "wechat"}, &xx)
 	})
-	if err != nil {
-		return err
-	}
+	return err
 }

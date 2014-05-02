@@ -21,19 +21,6 @@ func Template(key string, m interface{}) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func Interval(wait time.Duration, keys ...string) {
-	if len(keys) > 0 {
-		go func() {
-			for !c.close {
-				time.Sleep(wait)
-				for _, v := range keys {
-					c.update(v)
-				}
-			}
-		}()
-	}
-}
-
 func StartWeb(port int, dbname string, api string) {
 	m := martini.Classic()
 	m.NotFound(Template("404.tpl", m))

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/leptonyu/goeast/db"
 	"github.com/leptonyu/goeast/util"
 	"os"
 )

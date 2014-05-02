@@ -21,11 +21,16 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
-	config := db.NewDBConfig(*api)
+	config, err := db.NewDBConfig(*api)
+	if err != nil {
+		log.Panic(err)
+		os.Exit(1)
+	}
 	if *init {
 		err := config.Init(*appid, *secret, *token)
 		if err != nil {
 			log.Panicln(err)
+			os.Exit(1)
 		}
 		func(keys ...string) {
 			for _, key := range keys {

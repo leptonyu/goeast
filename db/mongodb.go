@@ -16,23 +16,34 @@ type DBConfig struct {
 	Prefix string //Mongodb database prefix name
 	DBName string //Mongodb database name
 	DBUrl  string //Mangodb connect url: mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]]
+	WC     *wechat.WeChat
 }
 
 //
-func NewDBConfigWithUser(dbname, host, username, password string) *DBConfig {
-	return &DBConfig{
+func NewDBConfigWithUser(dbname,
+	host,
+	username,
+	password string) (*DBConfig, error) {
+	c := &DBConfig{
 		Prefix: "wechat_",
 		DBName: dbname,
 		DBUrl:  "mongodb://" + username + ":" + password + "@" + host,
 	}
+	return c.init()
 }
 
-func NewDBConfig(dbname string) *DBConfig {
-	return &DBConfig{
+func NewDBConfig(dbname string) (*DBConfig, error) {
+	c := &DBConfig{
 		Prefix: "wechat_",
 		DBName: dbname,
 		DBUrl:  "mongodb://localhost",
 	}
+	return c.init()
+}
+
+func (c *DBConfig) init() (*DBConfig, error) {
+	_, err := c.CreateWeChat()
+	return c, err
 }
 
 type QueryFunc func(*mgo.Database) (interface{}, error)
@@ -104,7 +115,12 @@ func (c *DBConfig) CreateWeChat() (*wechat.WeChat, error) {
 	if err != nil {
 		return nil, err
 	}
-	return wechat.New(xx.Appid, xx.Secret, xx.Token, c)
+	wc, err := wechat.New(xx.Appid, xx.Secret, xx.Token, c)
+	if err != nil {
+		return nil, err
+	}
+	c.WC = wc
+	return wc, err
 }
 
 func (c *DBConfig) Init(appid, secret, token string) error {

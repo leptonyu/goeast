@@ -47,10 +47,12 @@ func TestB(t *testing.T) {
 	err := abc.Write(x)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	y, err := abc.Read()
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	if x.Token != y.Token {
 		t.Error("Token is not same!")

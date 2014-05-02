@@ -12,6 +12,7 @@ import (
 
 //MongoDB configuration
 type DBConfig struct {
+	Prefix string //Mongodb database prefix name
 	DBName string //Mongodb database name
 	DBUrl  string //Mangodb connect url: mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]]
 }
@@ -19,6 +20,7 @@ type DBConfig struct {
 //
 func NewDBConfigWithUser(dbname, host, username, password string) *DBConfig {
 	return &DBConfig{
+		Prefix: "wechat_",
 		DBName: dbname,
 		DBUrl:  "mongodb://" + username + ":" + password + "@" + host,
 	}
@@ -26,6 +28,7 @@ func NewDBConfigWithUser(dbname, host, username, password string) *DBConfig {
 
 func NewDBConfig(dbname string) *DBConfig {
 	return &DBConfig{
+		Prefix: "wechat_",
 		DBName: dbname,
 		DBUrl:  "mongodb://localhost",
 	}
@@ -40,7 +43,7 @@ func (c *DBConfig) Query(f QueryFunc) (data interface{}, err error) {
 		return
 	}
 	defer session.Close()
-	return f(session.DB(c.DBName))
+	return f(session.DB(c.Prefix + c.DBName))
 }
 
 type property struct {
@@ -84,7 +87,7 @@ func (c *DBConfig) Write(at *wechat.AccessToken) error {
 
 }
 
-func (c *DBConfig) CreateWeChat(dbname, api string) (*wechat.WeChat, error) {
+func (c *DBConfig) CreateWeChat() (*wechat.WeChat, error) {
 	xx := struct {
 		appid  string
 		secret string

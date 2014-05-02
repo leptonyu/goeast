@@ -20,12 +20,12 @@ func Template(key string, m interface{}) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func StartWeb(port int, dbname string, api string, config *db.DBConfig) {
+func StartWeb(port int, config *db.DBConfig) {
 	m := martini.Classic()
 	m.NotFound(Template("404.tpl", m))
 	m.Use(martini.Static("static", martini.StaticOptions{Prefix: "static"}))
 	m.Get("/", Template("index.tpl", m))
-	wc, err := config.CreateWeChat(dbname, api)
+	wc, err := config.CreateWeChat()
 	if err != nil {
 		panic(err)
 	}
@@ -69,8 +69,8 @@ func StartWeb(port int, dbname string, api string, config *db.DBConfig) {
 	})
 	//Create api route
 	ff := wc.CreateHandlerFunc()
-	m.Get("/"+api, ff)
-	m.Post("/"+api, ff)
+	m.Get("/"+config.DBName, ff)
+	m.Post("/"+config.DBName, ff)
 	err = http.ListenAndServe(":"+strconv.Itoa(port), m)
 	if err != nil {
 		fmt.Println(err)

@@ -26,5 +26,5 @@ func main() {
 		config.Init(*appid, *secret, *token)
 		os.Exit(0)
 	}
-	util.StartWeb(*port, *dbname, *api, config)
+	util.StartWeb(*port, *api, config)
 }

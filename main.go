@@ -21,7 +21,7 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
-	config := db.NewDBConfig(api)
+	config := db.NewDBConfig(*api)
 	if *init {
 		config.Init(*appid, *secret, *token)
 		os.Exit(0)

@@ -55,4 +55,6 @@ func TestB(t *testing.T) {
 	if x.Token != y.Token {
 		t.Error("Token is not same!")
 	}
+	t.Log(x)
+	t.Log(y)
 }

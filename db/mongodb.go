@@ -99,3 +99,21 @@ func (c *DBConfig) CreateWeChat(dbname, api string) (*wechat.WeChat, error) {
 	}
 	return wechat.New(xx.appid, xx.secret, xx.token, c)
 }
+
+func (c *DBConfig) Init(appid, secret, token string) error {
+	xx := struct {
+		appid  string
+		secret string
+		token  string
+	}{}
+	x.appid = appid
+	x.secret = secret
+	x.token = token
+	_, err := c.Query(func(database *mgo.Database) (interface{}, error) {
+		_, err := database.C("wechat").Upsert(bson.M{"name": "wechat"}, &xx)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+}

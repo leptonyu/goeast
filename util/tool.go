@@ -20,12 +20,11 @@ func Template(key string, m interface{}) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func StartWeb(port int, dbname string, api string) {
+func StartWeb(port int, dbname string, api string, init bool, config *db.DBConfig) {
 	m := martini.Classic()
 	m.NotFound(Template("404.tpl", m))
 	m.Use(martini.Static("static", martini.StaticOptions{Prefix: "static"}))
 	m.Get("/", Template("index.tpl", m))
-	config := db.NewDBConfig(api)
 	wc, err := config.CreateWeChat(dbname, api)
 	if err != nil {
 		panic(err)

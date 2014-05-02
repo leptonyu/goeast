@@ -19,12 +19,13 @@ const (
 
 //WeChat Struct
 type WeChat struct {
-	appid  string
-	secret string
-	token  string
-	retry  int
-	atrw   AccessTokenReaderWriter
-	routes []*route
+	appid       string
+	secret      string
+	token       string
+	retry       int
+	atrw        AccessTokenReaderWriter
+	routes      []*route
+	accesstoken AccessToken
 }
 
 //Access Token struct
@@ -74,6 +75,9 @@ func (wc *WeChat) UpdateAccessToken() (*AccessToken, error) {
 
 //Get Access Token retry three times
 func (wc *WeChat) getAccessToken() (string, error) {
+	if wc.accesstoken.Token != "" && time.Since(wc.accesstoken.ExpireTime).Seconds() < 0 {
+		return wc.accesstoken.Token, nil
+	}
 	for i := 1; i <= wc.retry; i++ {
 		t, err := wc.atrw.Read()
 		if err == nil {
@@ -88,6 +92,7 @@ func (wc *WeChat) getAccessToken() (string, error) {
 					}
 				}
 			}
+			wc.accesstoken = *t
 			return t.Token, nil
 		}
 	}

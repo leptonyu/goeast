@@ -27,6 +27,21 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
+		func(keys ...string) {
+			for _, key := range keys {
+				log.Println("Fetching web " + key)
+				config.UpdateMsg(key)
+			}
+		}(db.Blog, db.Events,
+			db.Home,
+			db.Campus,
+			db.Contact,
+			db.Galleries,
+			db.One2one,
+			db.Online,
+			db.Onsite,
+			db.Teachers,
+			db.Testimonials)
 		os.Exit(0)
 	}
 	util.StartWeb(*port, config)

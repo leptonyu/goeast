@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
-	"time"
 )
 
 const (
@@ -53,7 +52,7 @@ type HandlerFunc func(ResponseWriter, *Request) error
 type Request struct {
 	ToUserName   string
 	FromUserName string
-	CreateTime   time.Time
+	CreateTime   int
 	MsgType      string
 	MsgId        int64
 	Content      string  `json:",omitempty"`

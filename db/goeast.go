@@ -5,6 +5,7 @@ import (
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"net/http"
+	"time"
 )
 
 const (
@@ -30,11 +31,23 @@ const (
 )
 
 type Msg struct {
-	Name    string
-	Content string
+	Name       string
+	Content    string
+	CreateTime time.Time
 }
 
-func (c *DBConfig) Update(key string) (r *Msg, err error) {
+func (c *DBConfig) QueryMsg(key string) (r *Msg, err error) {
+	r = &Msg{}
+	_, err = c.Query(func(database *mgo.Database) (interface{}, error) {
+		err := database.C("web").Find(bson.M{"name": key}).One(&r)
+		return r, err
+	})
+	if err != nil {
+		return c.UpdateMsg(key)
+	}
+	return r, nil
+}
+func (c *DBConfig) UpdateMsg(key string) (r *Msg, err error) {
 	res, err := http.Get(url + key + "?format=json-pretty")
 	if err != nil {
 		return
@@ -44,8 +57,11 @@ func (c *DBConfig) Update(key string) (r *Msg, err error) {
 	if err != nil {
 		return
 	}
-	r = &Msg{Name: key,
-		Content: string(body)}
+	r = &Msg{
+		Name:       key,
+		Content:    string(body),
+		CreateTime: time.Now(),
+	}
 	_, err = c.Query(func(database *mgo.Database) (interface{}, error) {
 		return database.C("web").Upsert(bson.M{"name": key}, r)
 	})

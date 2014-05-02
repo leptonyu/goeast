@@ -6,6 +6,7 @@ import (
 	"github.com/leptonyu/goeast/db"
 	"github.com/leptonyu/goeast/wechat"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -27,24 +28,36 @@ func StartWeb(port int, config *db.DBConfig) {
 	m.Get("/", Template("index.tpl", m))
 	wc, err := config.CreateWeChat()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
+		os.Exit(1)
 	}
 	if port == 8080 {
 		go func() {
 			for {
-				a, err := wc.UpdateAccessToken()
+				_, err := wc.UpdateAccessToken()
 				if err != nil {
-					panic(err)
+					log.Fatalln(err)
 				}
-				time.Sleep((-1 * time.Duration(time.Since(a.ExpireTime).Seconds())))
+				time.Sleep(10 * time.Second)
 			}
 		}()
 		f := func(wait time.Duration, keys ...string) {
 			if len(keys) > 0 {
+				m := map[string]db.Msg{}
+				for _, v := range keys {
+					r, err := config.QueryMsg(v)
+					if err == nil {
+						m[v] = *r
+					}
+				}
 				for {
-					time.Sleep(wait)
+					time.Sleep(10 * time.Second)
 					for _, v := range keys {
-						config.Update(v)
+						msg, ok := m[v]
+						if ok && time.Since(msg.CreateTime.Add(wait)).Seconds() >= 0 {
+							fmt.Println(v)
+							config.UpdateMsg(v)
+						}
 					}
 				}
 			}
@@ -64,6 +77,7 @@ func StartWeb(port int, config *db.DBConfig) {
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.Content
 		//sig := strings.ToLower(txt)
+		log.Println(r)
 		w.ReplyText(txt)
 		return nil
 	})

@@ -69,7 +69,7 @@ do
 		rm $flg
 	fi
 	echo Starting service $p
-	nohup $port/$PRGNAME -port=$p >> $port/$p.log 2>&1 &
+	nohup $port/$PRGNAME -port=$p -api='api' >> $port/$p.log 2>&1 &
 	pid=`ps -ef | grep $PRGNAME | grep port=$p | awk '{print $2}'`
 	if echo $pid | egrep -q '^[0-9]+$'; then
 		echo $pid > $flg

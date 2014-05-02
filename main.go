@@ -9,7 +9,7 @@ import (
 
 func main() {
 	port := flag.Int("port", 8080, "Web service port")
-	api := flag.String("api", "api", "http://localhost/$api,\n		 Also use as database name with prefix wechat_")
+	api := flag.String("api", "api", "http://localhost/$api,\n	Also use as database name with prefix wechat_")
 	appid := flag.String("appid", "", "App id")
 	secret := flag.String("secret", "", "App secret")
 	token := flag.String("token", "", "Token")

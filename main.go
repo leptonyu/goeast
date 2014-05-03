@@ -33,7 +33,9 @@ func main() {
 				log.Println("Fetching web " + key)
 				config.UpdateMsg(key)
 			}
-		}(db.Blog, db.Events,
+		}(
+			db.Blog,
+			db.Events,
 			db.Home,
 			db.Campus,
 			db.Contact,
@@ -42,7 +44,8 @@ func main() {
 			db.Online,
 			db.Onsite,
 			db.Teachers,
-			db.Testimonials)
+			db.Testimonials,
+		)
 		os.Exit(0)
 	}
 

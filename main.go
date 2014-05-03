@@ -22,10 +22,6 @@ func main() {
 		os.Exit(0)
 	}
 	config, err := db.NewDBConfig(*api)
-	if err != nil {
-		log.Panic(err)
-		os.Exit(1)
-	}
 	if *init {
 		err := config.Init(*appid, *secret, *token)
 		if err != nil {
@@ -49,5 +45,11 @@ func main() {
 			db.Testimonials)
 		os.Exit(0)
 	}
+
+	if err != nil {
+		log.Panic(err)
+		os.Exit(1)
+	}
+
 	util.StartWeb(*port, config)
 }

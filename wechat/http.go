@@ -48,7 +48,7 @@ type route struct {
 
 type HandlerFunc func(ResponseWriter, *Request) error
 
-//WeChat Request
+//WeChat Request Object, this struct contains all kinds of request types provided by WeChat.
 type Request struct {
 	ToUserName   string
 	FromUserName string
@@ -77,6 +77,7 @@ type Request struct {
 }
 
 //Http Respond, Main method
+//This method is the main method to provide the functionality of WeChat SDK.
 func (wc *WeChat) HttpHandle(w http.ResponseWriter, r *http.Request) {
 	if !checkSignature(wc.token, w, r) {
 		http.Error(w, "", http.StatusUnauthorized)
@@ -119,15 +120,14 @@ func (wc *WeChat) HttpHandle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Create handler func
+// Package the wechat.HttpHandle() method into the standard http.HandlerFunc.
 func (wc *WeChat) CreateHandlerFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		wc.HttpHandle(w, r)
 	}
 }
 
-//Check signature of wechat server
-// token is given by WeChat
+//Check signature of WeChat request, this function is used to making sure the request comes from WeChat server.
 func checkSignature(token string, w http.ResponseWriter, r *http.Request) bool {
 	r.ParseForm()
 	var signature string = r.FormValue("signature")
@@ -144,7 +144,12 @@ func checkSignature(token string, w http.ResponseWriter, r *http.Request) bool {
 	return fmt.Sprintf("%x", h.Sum(nil)) == signature
 }
 
-// Register request callback.
+// Register request callback. Developer should use this method to deal with the specific type of request.
+/*
+	wc.HandlerFunc(wechat.MsgTypeText, func(w ResponseWriter, r *Request) error{
+		// do something to deal with the text request.
+	})
+*/
 func (wc *WeChat) HandleFunc(pattern string, handler HandlerFunc) {
 	regex, err := regexp.Compile(pattern)
 	if err != nil {

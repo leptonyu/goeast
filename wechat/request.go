@@ -30,7 +30,8 @@ const (
 	requestQRLimitScene = "{\"action_name\":\"QR_LIMIT_SCENE\",\"action_info\":{\"scene\":{\"scene_id\":%d}}}"
 )
 
-// Use to output reply
+// This interface provides all of the convenient methods that we can do to send messages to WeChat server.
+// Basically, these methods are invoked at the end of the procedure.
 type ResponseWriter interface {
 	// Reply message
 	ReplyText(text string)
@@ -73,6 +74,8 @@ type response struct {
 	ErrorMessage string `json:"errmsg,omitempty"`
 }
 
+// Post the request to WeChat server, will try three times.
+// But if access token is not available, this will return error right now.
 func (w *WeChat) postRequest(reqURL string, data []byte) ([]byte, error) {
 	for i := 0; i < w.retry; i++ {
 		token, err := w.getAccessToken()
@@ -105,6 +108,7 @@ func (w *WeChat) postRequest(reqURL string, data []byte) ([]byte, error) {
 	return nil, errors.New("WeiXin post request too many times:" + reqURL)
 }
 
+//Post message to WeChat server.
 func (wc *WeChat) postMessage(msg interface{}) error {
 	data, err := json.Marshal(msg)
 	if err != nil {
@@ -125,21 +129,33 @@ type responseWriterData struct {
 func (d *responseWriterData) replyHeader() string {
 	return fmt.Sprintf(replyHeader, d.toUserName, d.fromUserName, time.Now().Unix())
 }
+
+// Reply Text message.
 func (d *responseWriterData) ReplyText(text string) {
 	d.W.Write([]byte(fmt.Sprintf(replyText, d.replyHeader(), text)))
 }
+
+// Reply Image message.
 func (d *responseWriterData) ReplyImage(mediaId string) {
 	d.W.Write([]byte(fmt.Sprintf(replyImage, d.replyHeader(), mediaId)))
 }
+
+// Reply Voice message.
 func (d *responseWriterData) ReplyVoice(mediaId string) {
 	d.W.Write([]byte(fmt.Sprintf(replyVoice, d.replyHeader(), mediaId)))
 }
+
+// Reply Video message.
 func (d *responseWriterData) ReplyVideo(mediaId string, title string, description string) {
 	d.W.Write([]byte(fmt.Sprintf(replyVideo, d.replyHeader(), mediaId, title, description)))
 }
+
+// Reply Music message.
 func (d *responseWriterData) ReplyMusic(m *Music) {
 	d.W.Write([]byte(fmt.Sprintf(replyMusic, d.replyHeader(), m.Title, m.Description, m.MusicUrl, m.HQMusicUrl, m.ThumbMediaId)))
 }
+
+// Reply News message which contains links, images, titles and descriptions.
 func (d *responseWriterData) ReplyNews(articles []Article) {
 	var ctx string
 	for _, article := range articles {
@@ -148,7 +164,7 @@ func (d *responseWriterData) ReplyNews(articles []Article) {
 	d.W.Write([]byte(fmt.Sprintf(replyNews, d.replyHeader(), len(articles), ctx)))
 }
 
-// Post message
+// Post Text message.
 func (d *responseWriterData) PostText(text string) error {
 	var msg struct {
 		ToUser  string `json:"touser"`
@@ -162,6 +178,8 @@ func (d *responseWriterData) PostText(text string) error {
 	msg.Text.Content = text
 	return d.WC.postMessage(msg)
 }
+
+// Post Image message.
 func (d *responseWriterData) PostImage(mediaId string) error {
 	var msg struct {
 		ToUser  string `json:"touser"`
@@ -175,6 +193,8 @@ func (d *responseWriterData) PostImage(mediaId string) error {
 	msg.Image.MediaId = mediaId
 	return d.WC.postMessage(msg)
 }
+
+// Pose Voice message.
 func (d *responseWriterData) PostVoice(mediaId string) error {
 	var msg struct {
 		ToUser  string `json:"touser"`
@@ -188,6 +208,8 @@ func (d *responseWriterData) PostVoice(mediaId string) error {
 	msg.Voice.MediaId = mediaId
 	return d.WC.postMessage(msg)
 }
+
+// Post Video message.
 func (d *responseWriterData) PostVideo(mediaId string, title string, description string) error {
 	var msg struct {
 		ToUser  string `json:"touser"`
@@ -205,6 +227,8 @@ func (d *responseWriterData) PostVideo(mediaId string, title string, description
 	msg.Video.Description = description
 	return d.WC.postMessage(msg)
 }
+
+// Post Music message.
 func (d *responseWriterData) PostMusic(music *Music) error {
 	var msg struct {
 		ToUser  string `json:"touser"`
@@ -216,6 +240,8 @@ func (d *responseWriterData) PostMusic(music *Music) error {
 	msg.Music = music
 	return d.WC.postMessage(msg)
 }
+
+// Post News message which contains links, images, titles and descriptions.
 func (d *responseWriterData) PostNews(articles []Article) error {
 	var msg struct {
 		ToUser  string `json:"touser"`
@@ -230,7 +256,7 @@ func (d *responseWriterData) PostNews(articles []Article) error {
 	return d.WC.postMessage(msg)
 }
 
-// Media operator
+// Upload media from file.
 func (d *responseWriterData) UploadMediaFromFile(mediaType string, fp string) (string, error) {
 	file, err := os.Open(fp)
 	if err != nil {
@@ -239,6 +265,8 @@ func (d *responseWriterData) UploadMediaFromFile(mediaType string, fp string) (s
 	defer file.Close()
 	return d.UploadMedia(mediaType, filepath.Base(fp), file)
 }
+
+// Download media to file.
 func (d *responseWriterData) DownloadMediaToFile(mediaId string, filepath string) error {
 	file, err := os.Create(filepath)
 	if err != nil {
@@ -247,6 +275,8 @@ func (d *responseWriterData) DownloadMediaToFile(mediaId string, filepath string
 	defer file.Close()
 	return d.DownloadMedia(mediaId, file)
 }
+
+// Upload media from I/O streams.
 func (d *responseWriterData) UploadMedia(mediaType string, filename string, reader io.Reader) (string, error) {
 	reqURL := WeChatFileURL + "/upload?type=" + mediaType + "&access_token="
 	for i := 0; i < d.WC.retry; i++ {
@@ -297,6 +327,8 @@ func (d *responseWriterData) UploadMedia(mediaType string, filename string, read
 	}
 	return "", errors.New("WeiXin upload media too many times")
 }
+
+// Download media to I/O streams.
 func (d *responseWriterData) DownloadMedia(mediaId string, writer io.Writer) error {
 	reqURL := WeChatFileURL + "/get?media_id=" + mediaId + "&access_token="
 	for i := 0; i < d.WC.retry; i++ {

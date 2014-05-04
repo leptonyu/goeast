@@ -19,6 +19,7 @@ type Menu struct {
 	Buttons []MenuButton `json:"button,omitempty"`
 }
 
+// Menu Button
 type MenuButton struct {
 	Name       string       `json:"name"`
 	Type       string       `json:"type,omitempty"`
@@ -80,11 +81,13 @@ func (wc *WeChat) GetMenu() (*Menu, error) {
 	}
 }
 
+// Delete Menu
 func (wc *WeChat) DeleteMenu() error {
 	_, err := wc.sendGetRequest(WeChatHost + "/menu/delete?access_token=")
 	return err
 }
 
+// Send get request to WeChat server.
 func (wc *WeChat) sendGetRequest(reqURL string) ([]byte, error) {
 	for i := 0; i < wc.retry; i++ {
 		token, err := wc.getAccessToken()

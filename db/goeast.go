@@ -9,6 +9,8 @@ import (
 )
 
 const (
+	//Base URL
+	Url = `http://www.goeastmandarin.com`
 	//Home
 	Home = `/`
 	//Contact
@@ -28,14 +30,23 @@ const (
 	Events = "/events"
 	//url
 	url = "http://www.goeastmandarin.com"
+	//
+	MaxArticles = 3
 )
 
+// this struct is used for caching the GoEast site.
+// Then we can speed up the responds of WeChat requests.
+// There will be some goroutines used for update the cache in period time.
 type Msg struct {
-	Name       string
-	Content    string
-	CreateTime time.Time
+	Name       string    // Key of msg, list at the const in this package.
+	Content    string    // Content of msg, this content is formated as json.
+	CreateTime time.Time // create time of the content.
 }
 
+// Query the specific Msg by key, such as
+/*
+	r := c.QueryMsg(db.Events)
+*/
 func (c *DBConfig) QueryMsg(key string) (r *Msg, err error) {
 	r = &Msg{}
 	_, err = c.Query(func(database *mgo.Database) (interface{}, error) {
@@ -47,6 +58,9 @@ func (c *DBConfig) QueryMsg(key string) (r *Msg, err error) {
 	}
 	return r, nil
 }
+
+// Update Msg into database.
+// If the Msg with key Msg.Name does not exist, then it will create a new one.
 func (c *DBConfig) UpdateMsg(key string) (r *Msg, err error) {
 	res, err := http.Get(url + key + "?format=json-pretty")
 	if err != nil {

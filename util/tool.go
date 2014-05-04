@@ -1,3 +1,8 @@
+//Copyright 2014 leptonyu. All rights reserved. Use of this source code is governed by a MIT-style license that can be found in the LICENSE file.
+/*
+This package is used for create a web service.
+	util.StartWeb(8080,config)
+*/
 package util
 
 import (
@@ -10,6 +15,7 @@ import (
 	"strconv"
 )
 
+//Create html from templates files.
 func Template(key string, m interface{}) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		t := template.New(key)
@@ -18,6 +24,7 @@ func Template(key string, m interface{}) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// Start Web Service.
 func StartWeb(port int, config *db.DBConfig) {
 	m := martini.Classic()
 	m.NotFound(Template("404.tpl", m))

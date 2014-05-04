@@ -1,3 +1,17 @@
+// Copyright 2014 leptonyu. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+/*
+This package implments the WeChat SDK.
+
+The typical usage is like this:
+
+	wc, err := wechat.New(appid,secret,token,atrw)
+	if err != nil {
+		// handle err
+	}
+	// do something
+*/
 package wechat
 
 import (
@@ -55,6 +69,8 @@ func New(appid, secret, token string, atrw AccessTokenReaderWriter) (*WeChat, er
 	return wc, nil
 }
 
+//Update access token from wechat site. If the token is not expired then it will return the old one.
+// Access token should not change too frequently, because it is limited the total time of fetch a new one.
 func (wc *WeChat) UpdateAccessToken() (*AccessToken, error) {
 	at, err := wc.atrw.Read()
 	if err == nil && time.Since(at.ExpireTime).Seconds()+100 < 0 {
@@ -73,7 +89,7 @@ func (wc *WeChat) UpdateAccessToken() (*AccessToken, error) {
 	}
 }
 
-//Get Access Token retry three times
+//Get the valid access token, this will make sure to get the proper token, if it failed, then access token resource must be exhausted that day.
 func (wc *WeChat) getAccessToken() (string, error) {
 	if wc.accesstoken.Token != "" && time.Since(wc.accesstoken.ExpireTime).Seconds() < 0 {
 		return wc.accesstoken.Token, nil
@@ -99,7 +115,8 @@ func (wc *WeChat) getAccessToken() (string, error) {
 	return "", errors.New("Cannot get Access Token")
 }
 
-//Get accesstoken from wechat.
+//Get accesstoken directly from WeChat site, and this function should be invoked as few as possible.
+//The strategy is to store the access token by storage, this functionality should be provided by AccessTokenReaderWriter
 func fetchAccessToken(appid string, secret string) (*AccessToken, error) {
 	resp, err := http.Get(WeChatHost + "/token?grant_type=client_credential&appid=" + appid + "&secret=" + secret)
 	if err != nil {

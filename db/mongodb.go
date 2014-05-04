@@ -1,3 +1,4 @@
+//Copyright 2014 leptonyu. All rights reserved. Use of this source code is governed by a MIT-style license that can be found in the LICENSE file.
 /*
 This package is used to connect to the database.
 */
@@ -11,15 +12,15 @@ import (
 	"log"
 )
 
-//MongoDB configuration
+//MongoDB configuration, contains a wechat object.
 type DBConfig struct {
-	Prefix string //Mongodb database prefix name
-	DBName string //Mongodb database name
-	DBUrl  string //Mangodb connect url: mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]]
-	WC     *wechat.WeChat
+	Prefix string         //Mongodb database prefix name
+	DBName string         //Mongodb database name
+	DBUrl  string         //Mangodb connect url: mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]]
+	WC     *wechat.WeChat //WeChat SDK object.
 }
 
-//
+//MongoDB configuration with specific username and password.
 func NewDBConfigWithUser(dbname,
 	host,
 	username,
@@ -32,6 +33,7 @@ func NewDBConfigWithUser(dbname,
 	return c.init()
 }
 
+//MongoDB configuration with default username and password to connect to the localhost DB.
 func NewDBConfig(dbname string) (*DBConfig, error) {
 	c := &DBConfig{
 		Prefix: "wechat_",
@@ -41,14 +43,16 @@ func NewDBConfig(dbname string) (*DBConfig, error) {
 	return c.init()
 }
 
+// Init the DBConfig, which creates the WeChat SDK object.
 func (c *DBConfig) init() (*DBConfig, error) {
 	_, err := c.CreateWeChat()
 	return c, err
 }
 
+// Query Database function, all single operations of MongoDB should implement this function.
 type QueryFunc func(*mgo.Database) (interface{}, error)
 
-// One query on one connection.
+// One operation on MongoDB, this is final method used for operate the database.
 func (c *DBConfig) Query(f QueryFunc) (data interface{}, err error) {
 	session, err := mgo.Dial(c.DBUrl)
 	if err != nil {
@@ -64,6 +68,8 @@ type property struct {
 	Value string
 }
 
+// Read wechat.AccessToken from MongoDB.
+// If not found, it will return error.
 func (c *DBConfig) Read() (*wechat.AccessToken, error) {
 	x, err := c.Query(func(dbm *mgo.Database) (data interface{}, err error) {
 		c := dbm.C("wechat")
@@ -82,6 +88,7 @@ func (c *DBConfig) Read() (*wechat.AccessToken, error) {
 	return x.(*wechat.AccessToken), nil
 }
 
+// Write wechat.AccessToken into MongoDB.
 func (c *DBConfig) Write(at *wechat.AccessToken) error {
 	bs, err := json.Marshal(at)
 	if err != nil {
@@ -106,6 +113,7 @@ type storeWeChat struct {
 	Token  string
 }
 
+//Create WeChat Object from DBConfig.
 func (c *DBConfig) CreateWeChat() (*wechat.WeChat, error) {
 	xx := storeWeChat{}
 	_, err := c.Query(func(database *mgo.Database) (interface{}, error) {
@@ -123,6 +131,9 @@ func (c *DBConfig) CreateWeChat() (*wechat.WeChat, error) {
 	return wc, err
 }
 
+// Initialize the WeChat SDK, write the basic information into MongoDB.
+// Such as appid, appsecret, apitoken, etc.
+// After invoking this method, WeChat SDK object can work.
 func (c *DBConfig) Init(appid, secret, token string) error {
 	xx := storeWeChat{}
 	xx.Name = "wechat"

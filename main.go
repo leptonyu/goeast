@@ -38,18 +38,28 @@ func main() {
 				SubButtons: []wechat.MenuButton{
 					wechat.MenuButton{
 						Name: "Home",
-						Type: "view",
-						Url:  db.Url,
+						Type: "click",
+						Key:  "Home",
 					},
 					wechat.MenuButton{
-						Name: "Event",
+						Name: `          Teachers 》`,
 						Type: "view",
-						Url:  db.Url + db.Events,
+						Url:  db.Url + db.Teachers,
 					},
 					wechat.MenuButton{
-						Name: "Blog",
+						Name: ` 1 On 1 Tutoring 》`,
 						Type: "view",
-						Url:  db.Url + db.Blog,
+						Url:  db.Url + db.One2one,
+					},
+					wechat.MenuButton{
+						Name: ` Online Courses 》`,
+						Type: "view",
+						Url:  db.Url + db.Online,
+					},
+					wechat.MenuButton{
+						Name: `On Site Courses 》`,
+						Type: "view",
+						Url:  db.Url + db.Onsite,
 					},
 				},
 			},
@@ -96,6 +106,11 @@ func main() {
 						Name: "Jane",
 						Type: "click",
 						Key:  "Jane",
+					},
+					wechat.MenuButton{
+						Name: `Free Trial 》`,
+						Type: "view",
+						Url:  db.Url + "/free-trials",
 					},
 				},
 			},

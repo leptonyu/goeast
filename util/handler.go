@@ -53,6 +53,10 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	wc.HandleFunc(wechat.MsgTypeEventSubscribe, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		return help(config, w, r)
 	})
+	wc.HandleFunc(wechat.MsgTypeEventScan, func(w wechat.ResponseWriter, r *wechat.Request) error {
+		w.ReplyText("Aha! What are you doing?")
+		return nil
+	})
 	wc.HandleFunc(wechat.MsgTypeEventClick, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.EventKey
 		sig := strings.ToLower(txt)

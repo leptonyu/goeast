@@ -54,6 +54,8 @@ type AccessTokenReaderWriter interface {
 	Read() (*AccessToken, error)
 	//Write access token
 	Write(*AccessToken) error
+	//Save Msg
+	Save(Request) error
 }
 
 //Create WeChat Object

@@ -18,6 +18,8 @@ const (
 	EventUnsubscribe = "unsubscribe"
 	EventScan        = "scan"
 	EventClick       = "CLICK"
+	EventLocation    = "LOCATION"
+	EventView        = "VIEW"
 	// Message type
 	MsgTypeDefault          = ".*"
 	MsgTypeText             = "text"
@@ -31,6 +33,8 @@ const (
 	MsgTypeEventUnsubscribe = msgEvent + "\\." + EventUnsubscribe
 	MsgTypeEventScan        = msgEvent + "\\." + EventScan
 	MsgTypeEventClick       = msgEvent + "\\." + EventClick
+	MsgTypeEventView        = msgEvent + "\\." + EventView
+	MsgTypeEventLocation    = msgEvent + "\\." + EventLocation
 	// Media type
 	MediaTypeImage = "image"
 	MediaTypeVoice = "voice"
@@ -107,6 +111,7 @@ func (wc *WeChat) HttpHandle(w http.ResponseWriter, r *http.Request) {
 				if !route.regex.MatchString(requestPath) {
 					continue
 				}
+				go wc.atrw.Save(msg)
 				route.handler(&responseWriterData{
 					WC:           wc,
 					W:            w,

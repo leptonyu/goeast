@@ -37,6 +37,8 @@ const (
 	url = "http://www.goeastmandarin.com"
 	//
 	MaxArticles = 3
+	//
+	expireDuaration = 1 * time.Hour
 )
 
 // this struct is used for caching the GoEast site.
@@ -45,7 +47,7 @@ const (
 type Msg struct {
 	Name       string    // Key of msg, list at the const in this package.
 	Content    string    // Content of msg, this content is formated as json.
-	CreateTime time.Time // create time of the content.
+	ExpireTime time.Time // create time of the content.
 }
 
 // Query the specific Msg by key, such as
@@ -56,37 +58,25 @@ func (c *DBConfig) QueryMsg(key string) (r *Msg, err error) {
 	r = &Msg{}
 	_, err = c.Query(func(database *mgo.Database) (interface{}, error) {
 		err := database.C("web").Find(bson.M{"name": key}).One(&r)
+		if err != nil || time.Since(r.ExpireTime).Seconds() >= 0 {
+			res, err := http.Get(url + key + "?format=json-pretty")
+			if err != nil {
+				return nil, err
+			}
+			defer res.Body.Close()
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return nil, err
+			}
+			r = &Msg{
+				Name:       key,
+				Content:    string(body),
+				ExpireTime: time.Now().Add(expireDuaration),
+			}
+			return database.C("web").Upsert(bson.M{"name": key}, r)
+		}
 		return r, err
 	})
-	if err != nil {
-		return c.UpdateMsg(key)
-	}
-	return r, nil
-}
-
-// Update Msg into database.
-// If the Msg with key Msg.Name does not exist, then it will create a new one.
-func (c *DBConfig) UpdateMsg(key string) (r *Msg, err error) {
-	res, err := http.Get(url + key + "?format=json-pretty")
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return
-	}
-	r = &Msg{
-		Name:       key,
-		Content:    string(body),
-		CreateTime: time.Now(),
-	}
-	_, err = c.Query(func(database *mgo.Database) (interface{}, error) {
-		return database.C("web").Upsert(bson.M{"name": key}, r)
-	})
-	if err != nil {
-		return nil, err
-	}
 	return r, nil
 }
 
@@ -94,7 +84,7 @@ type requestLog struct {
 	From   string
 	To     string
 	Create int
-	Id     int64
+	Id     int64 `bson:",omitempty"`
 	Type   string
 	Value  string
 }

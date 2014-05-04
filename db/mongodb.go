@@ -92,6 +92,12 @@ func (c *DBConfig) Read() (*wechat.AccessToken, error) {
 	return x.(*wechat.AccessToken), nil
 }
 
+func (c *DBConfig) Save(msg wechat.Request) error {
+	log.Println(msg)
+	c.Log(&msg)
+	return nil
+}
+
 // Write wechat.AccessToken into MongoDB.
 func (c *DBConfig) Write(at *wechat.AccessToken) error {
 	bs, err := json.Marshal(at)

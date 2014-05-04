@@ -31,6 +31,7 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	//Text request
 	drs := &routes{}
 	drs.register(`^(admin|adm|管理员)(:(help|account))?$`, db.Admin())
+	drs.register(`^\s*(contact-us|maria|emily|jane)\s*$`, db.Teacher())
 	drs.register(`^\s*(help|h|帮助)\s*$`, help)
 	drs.register(`^\s*(events?|事件|活动)\s*$`, event)
 	drs.register(`^\s*(blogs?|日志|博客)\s*$`, blog)
@@ -38,7 +39,6 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.Content
 		sig := strings.ToLower(txt)
-		go config.Log(r)
 		for _, v := range drs.rs {
 			if v.regx.MatchString(sig) {
 				err := v.handler(config, w, r)
@@ -50,10 +50,34 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 		w.ReplyText(txt)
 		return nil
 	})
+	wc.HandleFunc(wechat.MsgTypeEventSubscribe, func(w wechat.ResponseWriter, r *wechat.Request) error {
+		return help(config, w, r)
+	})
+	wc.HandleFunc(wechat.MsgTypeEventClick, func(w wechat.ResponseWriter, r *wechat.Request) error {
+		txt := r.EventKey
+		sig := strings.ToLower(txt)
+		for _, v := range drs.rs {
+			if v.regx.MatchString(sig) {
+				err := v.handler(config, w, r)
+				if err == nil {
+					return nil
+				}
+			}
+		}
+		w.ReplyText("Event key has no respond " + txt)
+		return nil
+	})
 }
 
 func home(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	w.ReplyText(`<a href='` + db.Url + `'>GoEast Language Centers</a>`)
+	w.ReplyNews([]wechat.Article{
+		wechat.Article{
+			Title:       "GoEast Language Centers",
+			PicUrl:      "http://static.squarespace.com/static/52141adee4b0476aaa6af594/t/52e83ec9e4b0dfc630da5953/1390952403577/XJL_8779-small.jpg",
+			Url:         db.Url,
+			Description: `GoEast Language centers is one of Shanghai's premiere Mandarin language schools. We offer tutoring services, online classes, and on-site classes at our beautiful Shanghai campus. Our mission is to teach Mandarin and Chinese culture in a fun, personal, and effective environment. At GoEast we focus on helping you achieve your learning goals with as much personal attention as possible and no self help gimmicks! Learning language is best done with others, and we hope you'll join us at GoEast! `,
+		},
+	})
 	return nil
 }
 
@@ -155,46 +179,8 @@ func DeamonTask(config *db.DBConfig) {
 			time.Sleep(10 * time.Second)
 		}
 	}()
-	f := func(wait time.Duration, keys ...string) (*time.Timer, error) {
-		if len(keys) > 0 {
-			m := map[string]db.Msg{}
-			for _, v := range keys {
-				r, err := config.QueryMsg(v)
-				if err == nil {
-					m[v] = *r
-				}
-			}
-			return time.AfterFunc(10*time.Second, func() {
-				for _, v := range keys {
-					msg, ok := m[v]
-					if ok && time.Since(msg.CreateTime.Add(wait)).Seconds() >= 0 {
-						fmt.Println(v)
-						config.UpdateMsg(v)
-					}
-				}
-			}), nil
-		}
-		return nil, errors.New("No keys")
-	}
-	t1, err1 := f(30*time.Minute, db.Blog, db.Events)
-	t2, err2 := f(24*time.Hour,
-		db.Home,
-		db.Campus,
-		db.Contact,
-		db.Galleries,
-		db.One2one,
-		db.Online,
-		db.Onsite,
-		db.Teachers,
-		db.Testimonials)
 	go func() {
 		<-c
 		shutdown = true
-		if err1 == nil {
-			t1.Stop()
-		}
-		if err2 == nil {
-			t2.Stop()
-		}
 	}()
 }

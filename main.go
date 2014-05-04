@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/leptonyu/goeast/db"
 	"github.com/leptonyu/goeast/util"
+	"github.com/leptonyu/goeast/wechat"
 	"log"
 	"os"
 )
@@ -30,10 +31,80 @@ func main() {
 			log.Panicln(err)
 			os.Exit(1)
 		}
+		menu := &wechat.Menu{}
+		menu.Buttons = []wechat.MenuButton{
+			wechat.MenuButton{
+				Name: "Site",
+				SubButtons: []wechat.MenuButton{
+					wechat.MenuButton{
+						Name: "Home",
+						Type: "view",
+						Url:  db.Url,
+					},
+					wechat.MenuButton{
+						Name: "Event",
+						Type: "view",
+						Url:  db.Url + db.Events,
+					},
+					wechat.MenuButton{
+						Name: "Blog",
+						Type: "view",
+						Url:  db.Url + db.Blog,
+					},
+				},
+			},
+			wechat.MenuButton{
+				Name: "Event",
+				SubButtons: []wechat.MenuButton{
+					wechat.MenuButton{
+						Name: "Recent Events",
+						Type: "click",
+						Key:  "Event",
+					},
+					wechat.MenuButton{
+						Name: "Recent Blogs",
+						Type: "click",
+						Key:  "Blog",
+					},
+					wechat.MenuButton{
+						Name: "Help",
+						Type: "click",
+						Key:  "Help",
+					},
+				},
+			},
+
+			wechat.MenuButton{
+				Name: "Contact",
+				SubButtons: []wechat.MenuButton{
+					wechat.MenuButton{
+						Name: "Contect Us",
+						Type: "click",
+						Key:  "contact-us",
+					},
+					wechat.MenuButton{
+						Name: "Emily",
+						Type: "click",
+						Key:  "Emily",
+					},
+					wechat.MenuButton{
+						Name: "Maria",
+						Type: "click",
+						Key:  "Maria",
+					},
+					wechat.MenuButton{
+						Name: "Jane",
+						Type: "click",
+						Key:  "Jane",
+					},
+				},
+			},
+		}
+		config.WC.CreateMenu(menu)
 		func(keys ...string) {
 			for _, key := range keys {
 				log.Println("Fetching web " + key)
-				config.UpdateMsg(key)
+				config.QueryMsg(key)
 			}
 		}(
 			db.Blog,

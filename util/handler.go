@@ -153,7 +153,45 @@ func event(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 }
 
 func blog(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	w.ReplyText("This is blog!")
+	msg, err := c.QueryMsg(db.Events)
+	if err != nil {
+		w.ReplyText("Sorry, No event found!")
+		return nil
+	}
+	j, err := json.NewJson([]byte(msg.Content))
+	if err != nil {
+		w.ReplyText(err.Error())
+		return nil
+	}
+	mapa := map[int]wechat.Article{}
+	past := j.Get("items")
+	for i, _ := range past.MustArray() {
+		event := past.GetIndex(i)
+		a := wechat.Article{
+			Url:         db.Url + event.Get("fullUrl").MustString(),
+			Title:       event.Get("title").MustString(),
+			PicUrl:      event.Get("assetUrl").MustString(),
+			Description: event.Get("excerpt").MustString(),
+		}
+		t := event.Get("addedOn").MustInt()
+		mapa[t] = a
+	}
+	if len(mapa) == 0 {
+		return errors.New("no new events")
+	}
+	var keys []int
+	for k, _ := range mapa {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	res := []wechat.Article{}
+	if len(keys) > db.MaxArticles {
+		keys = keys[:db.MaxArticles]
+	}
+	for _, k := range keys {
+		res = append(res, mapa[k])
+	}
+	w.ReplyNews(res)
 	return nil
 }
 

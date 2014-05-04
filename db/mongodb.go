@@ -18,6 +18,7 @@ type DBConfig struct {
 	DBName string         //Mongodb database name
 	DBUrl  string         //Mangodb connect url: mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]]
 	WC     *wechat.WeChat //WeChat SDK object.
+	admins []*User
 }
 
 //MongoDB configuration with specific username and password.
@@ -46,6 +47,9 @@ func NewDBConfig(dbname string) (*DBConfig, error) {
 // Init the DBConfig, which creates the WeChat SDK object.
 func (c *DBConfig) init() (*DBConfig, error) {
 	_, err := c.CreateWeChat()
+	if err == nil {
+		c.admins = c.FindAdmins()
+	}
 	return c, err
 }
 

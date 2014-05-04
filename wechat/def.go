@@ -119,6 +119,7 @@ func (wc *WeChat) getAccessToken() (string, error) {
 //The strategy is to store the access token by storage, this functionality should be provided by AccessTokenReaderWriter
 func fetchAccessToken(appid string, secret string) (*AccessToken, error) {
 	resp, err := http.Get(WeChatHost + "/token?grant_type=client_credential&appid=" + appid + "&secret=" + secret)
+	log.Println("GET: Token", time.Now())
 	if err != nil {
 		log.Println("Get access token failed: ", err)
 		return nil, err

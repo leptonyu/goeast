@@ -1,9 +1,14 @@
 package db
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/leptonyu/goeast/wechat"
 	"io/ioutil"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"log"
 	"net/http"
 	"time"
 )
@@ -83,4 +88,139 @@ func (c *DBConfig) UpdateMsg(key string) (r *Msg, err error) {
 		return nil, err
 	}
 	return r, nil
+}
+
+type requestLog struct {
+	From   string
+	To     string
+	Create int
+	Id     int64
+	Type   string
+	Value  string
+}
+
+func (c *DBConfig) Log(r *wechat.Request) {
+	bs, err := json.Marshal(r)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	rl := &requestLog{
+		From:   r.FromUserName,
+		To:     r.ToUserName,
+		Create: r.CreateTime,
+		Id:     r.MsgId,
+		Type:   r.MsgType,
+		Value:  string(bs),
+	}
+	c.Query(func(d *mgo.Database) (interface{}, error) {
+		d.C("userinfo").Upsert(bson.M{
+			"from": rl.From,
+			"to":   rl.To,
+			"type": rl.Type,
+			"id":   rl.Id,
+		}, rl)
+		return nil, nil
+	})
+}
+
+func (c *DBConfig) QueryLog(username, typename string) ([]*wechat.Request, error) {
+	if username == "" && typename == "" {
+		return nil, errors.New("Pamater invalid")
+	} else if username == "" {
+		rs := []*wechat.Request{}
+		_, err := c.Query(func(d *mgo.Database) (interface{}, error) {
+			return nil,
+				d.C("userinfo").Find(bson.M{"type": typename}).All(&rs)
+		})
+		return rs, err
+	} else if typename == "" {
+		rs := []*wechat.Request{}
+		_, err := c.Query(func(d *mgo.Database) (interface{}, error) {
+			return nil, d.C("userinfo").Find(bson.M{"from": username}).All(&rs)
+		})
+		return rs, err
+	} else {
+		rs := []*wechat.Request{}
+		_, err := c.Query(func(d *mgo.Database) (interface{}, error) {
+			return nil, d.C("userinfo").Find(bson.M{"from": username, "type": typename}).All(&rs)
+		})
+		return rs, err
+	}
+}
+
+type User struct {
+	Id       string
+	Username string
+	Admin    bool
+}
+
+func (c *DBConfig) IsAdmin(id string) bool {
+	if id == "" {
+		return false
+	}
+	for _, user := range c.admins {
+		if user.Id == id {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *DBConfig) GetAdmin(id string) (*User, error) {
+	if id == "" {
+		return nil, errors.New("Speficy the admin id")
+	}
+	for _, user := range c.admins {
+		if user.Id == id {
+			return user, nil
+		}
+	}
+	return nil, errors.New("User with id " + id + " is not admin!")
+}
+func (c *DBConfig) FindAdmins() []*User {
+	user := []*User{}
+	_, err := c.Query(func(d *mgo.Database) (interface{}, error) {
+		return nil, d.C("user").Find(bson.M{"admin": true}).All(&user)
+	})
+	if err != nil {
+		return []*User{}
+	}
+	return user
+}
+
+func (c *DBConfig) Upsert(user *User) error {
+	_, err := c.Query(func(d *mgo.Database) (interface{}, error) {
+		return d.C("user").Upsert(bson.M{"id": user.Id}, user)
+	})
+	if err == nil {
+		c.admins = c.FindAdmins()
+	}
+	return err
+}
+
+func (c *DBConfig) UpsertWithUser(id, username string, isAdmin bool) error {
+	return c.Upsert(&User{
+		Id:       id,
+		Username: username,
+		Admin:    isAdmin,
+	})
+}
+
+func Admin() func(*DBConfig, wechat.ResponseWriter, *wechat.Request) error {
+	return func(c *DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
+		for _, v := range c.admins {
+			if r.FromUserName == v.Id {
+				w.ReplyText(fmt.Sprintf(`Hello %v, you are the admin.
+adm:help
+	Get Admin Help
+adm:status
+	Get Admin Status
+`, v.Username))
+				return nil
+			}
+		}
+		return errors.New("You are not administrator!")
+		return nil
+	}
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/leptonyu/goeast/db"
 	"github.com/leptonyu/goeast/wechat"
 	"log"
+	"os"
+	"os/signal"
 	"regexp"
 	"sort"
 	"strings"
@@ -28,6 +30,7 @@ type routes struct {
 func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	//Text request
 	drs := &routes{}
+	drs.register(`^(admin|adm|管理员)(:(help|account))?$`, db.Admin())
 	drs.register(`^\s*(help|h|帮助)\s*$`, help)
 	drs.register(`^\s*(events?|事件|活动)\s*$`, event)
 	drs.register(`^\s*(blogs?|日志|博客)\s*$`, blog)
@@ -35,10 +38,13 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.Content
 		sig := strings.ToLower(txt)
-		log.Println(r)
+		go config.Log(r)
 		for _, v := range drs.rs {
 			if v.regx.MatchString(sig) {
-				return v.handler(config, w, r)
+				err := v.handler(config, w, r)
+				if err == nil {
+					return nil
+				}
 			}
 		}
 		w.ReplyText(txt)
@@ -52,6 +58,17 @@ func home(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 }
 
 func help(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
+	adm := ``
+	ad, err := c.GetAdmin(r.FromUserName)
+	if err == nil {
+		adm = fmt.Sprintf(`
+Hello %v, you can use following command:
+adm:help
+	Get Admin Helps
+adm:test
+	This is test
+`, ad.Username)
+	}
 	w.ReplyText(`Welcome to <a href='` + db.Url + `'>GoEast Language Centers</a>, use the following keywords to get information:
 Home
 	Get Homepage
@@ -60,7 +77,7 @@ Help
 Event
 	Get Events
 Blog
-	Get Blogs`)
+	Get Blogs` + adm)
 	return nil
 }
 
@@ -126,8 +143,11 @@ func (rs *routes) register(pattern string, handler RouteFunc) error {
 }
 
 func DeamonTask(config *db.DBConfig) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	shutdown := false
 	go func() {
-		for {
+		for !shutdown {
 			_, err := config.WC.UpdateAccessToken()
 			if err != nil {
 				log.Fatalln(err)
@@ -135,7 +155,7 @@ func DeamonTask(config *db.DBConfig) {
 			time.Sleep(10 * time.Second)
 		}
 	}()
-	f := func(wait time.Duration, keys ...string) {
+	f := func(wait time.Duration, keys ...string) (*time.Timer, error) {
 		if len(keys) > 0 {
 			m := map[string]db.Msg{}
 			for _, v := range keys {
@@ -144,8 +164,7 @@ func DeamonTask(config *db.DBConfig) {
 					m[v] = *r
 				}
 			}
-			for {
-				time.Sleep(wait)
+			return time.AfterFunc(10*time.Second, func() {
 				for _, v := range keys {
 					msg, ok := m[v]
 					if ok && time.Since(msg.CreateTime.Add(wait)).Seconds() >= 0 {
@@ -153,11 +172,12 @@ func DeamonTask(config *db.DBConfig) {
 						config.UpdateMsg(v)
 					}
 				}
-			}
+			}), nil
 		}
+		return nil, errors.New("No keys")
 	}
-	go f(30*time.Minute, db.Blog, db.Events)
-	go f(24*time.Hour,
+	t1, err1 := f(30*time.Minute, db.Blog, db.Events)
+	t2, err2 := f(24*time.Hour,
 		db.Home,
 		db.Campus,
 		db.Contact,
@@ -167,4 +187,14 @@ func DeamonTask(config *db.DBConfig) {
 		db.Onsite,
 		db.Teachers,
 		db.Testimonials)
+	go func() {
+		<-c
+		shutdown = true
+		if err1 == nil {
+			t1.Stop()
+		}
+		if err2 == nil {
+			t2.Stop()
+		}
+	}()
 }

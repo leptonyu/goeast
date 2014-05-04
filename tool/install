@@ -34,3 +34,4 @@ if [ ! -e $PRGDIR/app ];then
 fi
 rm -f $GOPATH/bin/$1
 ln -s $PRGDIR/app $GOPATH/bin/$1
+

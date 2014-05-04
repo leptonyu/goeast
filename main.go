@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"github.com/leptonyu/goeast/db"
 	"github.com/leptonyu/goeast/util"
@@ -16,6 +17,7 @@ func main() {
 	token := flag.String("token", "", "Token")
 	init := flag.Bool("init", false, "Init ")
 	help := flag.Bool("h", false, "Help")
+	admin := flag.Bool("admin", false, "Add administrator")
 	flag.Parse()
 	if *help {
 		flag.PrintDefaults()
@@ -46,6 +48,24 @@ func main() {
 			db.Teachers,
 			db.Testimonials,
 		)
+		os.Exit(0)
+	}
+	if *admin {
+		file, err := os.Open("tool/admin.list")
+		if err != nil {
+			log.Panic(err)
+			os.Exit(1)
+		}
+		defer file.Close()
+		all, err := csv.NewReader(file).ReadAll()
+		if err != nil {
+			log.Panic(err)
+			os.Exit(1)
+		}
+		for _, value := range all {
+			log.Println("Add administrator", value[1])
+			config.UpsertWithUser(value[0], value[1], true)
+		}
 		os.Exit(0)
 	}
 

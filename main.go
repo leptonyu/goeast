@@ -42,9 +42,9 @@ func main() {
 						Key:  "Home",
 					},
 					wechat.MenuButton{
-						Name: `          Teachers 》`,
+						Name: `       Free Trial 》`,
 						Type: "view",
-						Url:  db.Url + db.Teachers,
+						Url:  db.Url + "/free-trials",
 					},
 					wechat.MenuButton{
 						Name: ` 1 On 1 Tutoring 》`,
@@ -108,9 +108,9 @@ func main() {
 						Key:  "Jane",
 					},
 					wechat.MenuButton{
-						Name: `Free Trial 》`,
+						Name: `Teachers 》`,
 						Type: "view",
-						Url:  db.Url + "/free-trials",
+						Url:  db.Url + db.Teachers,
 					},
 				},
 			},

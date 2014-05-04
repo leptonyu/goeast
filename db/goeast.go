@@ -221,6 +221,5 @@ adm:status
 			}
 		}
 		return errors.New("You are not administrator!")
-		return nil
 	}
 }

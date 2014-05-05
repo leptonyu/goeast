@@ -125,7 +125,12 @@ func main() {
 				},
 			},
 		}
-		config.WC.CreateMenu(menu)
+		err = config.WC.CreateMenu(menu)
+		if err != nil {
+			log.Println("Create Menu failed!")
+		} else {
+			log.Println("Create Menu succeed!")
+		}
 		func(keys ...string) {
 			for _, key := range keys {
 				log.Println("Fetching web " + key)

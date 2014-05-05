@@ -37,7 +37,7 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	drs.register(`^\s*(help|h|帮助)\s*$`, help)
 	drs.register(`^\s*(events?|事件|活动)\s*$`, event)
 	drs.register(`^\s*(blogs?|日志|博客)\s*$`, blog)
-	drs.register(`^\s*(today|今日|当日)\s*$`, today)
+	drs.register(`^\s*(next|下一个)\s*$`, next)
 	drs.register(`^\s*(week|本周|这周)\s*$`, week)
 	drs.register(`^\s*(home|主页|首页)\s*$`, home)
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
@@ -131,41 +131,47 @@ func (d dua) Swap(i, j int) {
 }
 
 func getEventArticle(event *json.Json) (wechat.Article, time.Duration) {
+	s, e := time.Duration(event.Get("startDate").MustInt64()), time.Duration(event.Get("endDate").MustInt64())
+	ts, te := BaseTime.Add(s*time.Millisecond), BaseTime.Add(e*time.Millisecond)
+	desp := ts.Format(`Monday, Jan _2, 2006
+  03:04pm`) + " - " + te.Format(`03:04pm`)
 	return wechat.Article{
 		Url:         db.Url + event.Get("fullUrl").MustString(),
 		Title:       event.Get("title").MustString(),
 		PicUrl:      event.Get("assetUrl").MustString(),
-		Description: event.Get("excerpt").MustString(),
-	}, time.Duration(event.Get("startDate").MustInt64())
+		Description: desp,
+	}, s
 }
 
 //Handle event request.
 func handleEvent(c *db.DBConfig,
 	w wechat.ResponseWriter,
 	r *wechat.Request,
-	check func(*time.Time) bool,
-	errstr string) error {
+	check func(time.Time) bool,
+	errstr string, max int) error {
 	deferr := errors.New(errstr)
 	msg, err := c.QueryMsg(db.Events)
 	if err != nil {
+		log.Println(err)
 		w.ReplyText(deferr.Error())
 		return nil
 	}
 	j, err := json.NewJson([]byte(msg.Content))
 	if err != nil {
+		log.Println(err)
 		w.ReplyText(deferr.Error())
 		return nil
 	}
 	mapa := map[time.Duration]wechat.Article{}
-	past := j.Get("upcomming")
+	past := j.Get("upcoming")
 	for i, _ := range past.MustArray() {
 		a, f := getEventArticle(past.GetIndex(i))
-		tf := BaseTime.Add(f * time.Millisecond)
-		if check(&tf) {
+		if check(BaseTime.Add(f * time.Millisecond)) {
 			mapa[f] = a
 		}
 	}
 	if len(mapa) == 0 {
+		log.Println(err)
 		w.ReplyText(deferr.Error())
 		return nil
 	}
@@ -175,12 +181,8 @@ func handleEvent(c *db.DBConfig,
 	}
 	sort.Sort(keys)
 	res := []wechat.Article{}
-	if len(keys) > db.MaxArticles {
-		keys = keys[len(keys)-db.MaxArticles:]
-	}
-	n := len(keys)
-	for i := 0; i < n/2; i++ {
-		keys[i], keys[n-1-i] = keys[n-1-i], keys[i]
+	if len(keys) > max {
+		keys = keys[:max]
 	}
 	for _, k := range keys {
 		res = append(res, mapa[k])
@@ -191,23 +193,23 @@ func handleEvent(c *db.DBConfig,
 
 //Upcoming event, only list 3 events.
 func event(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	return handleEvent(c, w, r, func(t *time.Time) bool {
+	return handleEvent(c, w, r, func(t time.Time) bool {
 		return true
-	}, `Oops! No event recently!`)
+	}, `Oops! No event recently!`, db.MaxArticles)
 }
 
-//Today's events.
-func today(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	return handleEvent(c, w, r, func(t *time.Time) bool {
-		return time.Now().Day() == t.Day()
-	}, `Oops! No event today!`)
+//Next event.
+func next(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
+	return handleEvent(c, w, r, func(t time.Time) bool {
+		return true
+	}, `Oops! No next event!`, 1)
 }
 
 //This week's events.
 func week(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	return handleEvent(c, w, r, func(t *time.Time) bool {
-		return time.Now().Day() == t.Day()
-	}, `Oops! No event this week!`)
+	return handleEvent(c, w, r, func(t time.Time) bool {
+		return time.Since(t).Hours() >= -7*24
+	}, `Oops! No event in next 7 days!`, db.MaxArticles)
 }
 
 //Recent Blogs.
@@ -247,7 +249,11 @@ func blog(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 	sort.Sort(keys)
 	res := []wechat.Article{}
 	if len(keys) > db.MaxArticles {
-		keys = keys[:db.MaxArticles]
+		keys = keys[len(keys)-db.MaxArticles:]
+	}
+	n := len(keys)
+	for i := 0; i < n/2; i++ {
+		keys[i], keys[n-1-i] = keys[n-1-i], keys[i]
 	}
 	for _, k := range keys {
 		res = append(res, mapa[k])

@@ -93,7 +93,6 @@ func (c *DBConfig) Read() (*wechat.AccessToken, error) {
 }
 
 func (c *DBConfig) Save(msg wechat.Request) error {
-	log.Println(msg)
 	c.Log(&msg)
 	return nil
 }

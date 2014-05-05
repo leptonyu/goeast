@@ -53,6 +53,8 @@ if [ $? -ne 0 ]; then
 	exit 201
 fi
 
+export http_proxy=177.72.181.1:3128
+
 for p in 8080 8081 8082
 do
 	flg=$port/$p.pid

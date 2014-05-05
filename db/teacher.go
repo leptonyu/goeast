@@ -69,22 +69,26 @@ func t(w wechat.ResponseWriter, tt teacher) error {
 	w.ReplyText(fmt.Sprintf(`%v (%v)
 Teacher & Consultant
 GoEast Language Center
+
 Telephone: 
 %v
+
 Skype:
   %v
+
 Email: 
 %v`, tt.Name, tt.Chinese, tt.Phone, tt.Skype, tt.Email))
 	return nil
 }
 
 func cc(w wechat.ResponseWriter) error {
-	w.ReplyText(`GoEast Language Centers
-No 194-196 Zhengmin Road
-Yangpu District, Shanghai
-China
+	w.ReplyText(`GoEast Language Center
+
+No 194-196 Zhengmin Road, Yangpu District, Shanghai, China
+
 Telephone: 
   86-21-31326611  
+
 Email: 
 coursecenter@goeast.cn`)
 	return nil

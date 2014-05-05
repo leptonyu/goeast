@@ -93,14 +93,16 @@ func help(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 	ad, err := c.GetAdmin(r.FromUserName)
 	if err == nil {
 		adm = fmt.Sprintf(`
-Hello %v, you can use following command:
+Hello %v, you can use following keywords:
+
 adm:help
 	Get Admin Helps
 adm:test
 	This is test
 `, ad.Username)
 	}
-	w.ReplyText(`Welcome to <a href='` + db.Url + `'>GoEast Language Centers</a>, use the following keywords to get information:
+	w.ReplyText(`Welcome to <a href='` + db.Url + `'>GoEast Language Centers</a>, use the following keywords to get further information:
+
 Home
 	Get Homepage
 Help

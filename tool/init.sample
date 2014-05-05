@@ -1,0 +1,33 @@
+#!/bin/sh
+PRG="$0"
+
+while [ -h "$PRG" ]; do
+	ls=`ls -ld "$PRG"`
+	link=`expr "$ls" : '.*-> \(.*\)$'`
+	if expr "$link" : '/.*' > /dev/null; then
+		PRG="$link"
+	else
+		PRG=`dirname "$PRG"`/"$link"
+	fi
+done
+
+PRGDIR=`dirname "$PRG"`
+PRGDIR=`cd $PRGDIR/..;pwd`
+
+if echo "$1" | grep -iqvE '^[a-z]{2,10}$'; then
+	echo Parameter "$1" invalid!
+	exit 201
+fi
+go build github.com/leptonyu/goeast
+
+if [ $? -ne 0 ]; then
+	echo Build error!
+	exit 201
+fi
+
+./goeast -init -api="$1" \ 
+-appid='wxxxxxxxxxxxxxxxxxxx' \ 
+-secret='secretttttttttttttttttttttttt' \ 
+-token='TOkENsssssss'
+
+rm goeast

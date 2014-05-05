@@ -124,15 +124,6 @@ func main() {
 		}(
 			db.Blog,
 			db.Events,
-			db.Home,
-			db.Campus,
-			db.Contact,
-			db.Galleries,
-			db.One2one,
-			db.Online,
-			db.Onsite,
-			db.Teachers,
-			db.Testimonials,
 		)
 		os.Exit(0)
 	}

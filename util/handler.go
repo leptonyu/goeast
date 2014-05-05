@@ -60,6 +60,9 @@ Reply Help to get helps.`)
 		w.ReplyText("Aha! What are you doing?")
 		return nil
 	})
+	wc.HandleFunc(wechat.MsgTypeEventView, func(w wechat.ResponseWriter, r *wechat.Request) error {
+		return nil
+	})
 	wc.HandleFunc(wechat.MsgTypeEventClick, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.EventKey
 		sig := strings.ToLower(txt)

@@ -24,9 +24,7 @@ type dispatchRoute struct {
 
 type RouteFunc func(*db.DBConfig, wechat.ResponseWriter, *wechat.Request) error
 
-type routes struct {
-	rs []*dispatchRoute
-}
+type routes []*dispatchRoute
 
 // Register Dispatch handler
 func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
@@ -43,7 +41,7 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.Content
 		sig := strings.ToLower(txt)
-		for _, v := range drs.rs {
+		for _, v := range *drs {
 			if v.regx.MatchString(sig) {
 				err := v.handler(config, w, r)
 				if err == nil {
@@ -65,7 +63,7 @@ Reply Help to get helps.`)
 	wc.HandleFunc(wechat.MsgTypeEventClick, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.EventKey
 		sig := strings.ToLower(txt)
-		for _, v := range drs.rs {
+		for _, v := range *drs {
 			if v.regx.MatchString(sig) {
 				err := v.handler(config, w, r)
 				if err == nil {
@@ -262,12 +260,13 @@ func blog(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 	return nil
 }
 
+//Register routes
 func (rs *routes) register(pattern string, handler RouteFunc) error {
 	r, err := regexp.Compile(pattern)
 	if err != nil {
 		return err
 	}
-	rs.rs = append(rs.rs, &dispatchRoute{regx: r, handler: handler})
+	*rs = append(*rs, &dispatchRoute{regx: r, handler: handler})
 	return nil
 }
 

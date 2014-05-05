@@ -33,11 +33,12 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	//Text request
 	drs := &routes{}
 	drs.register(`^(admin|adm|管理员)(:(help|account))?$`, db.Admin())
-	drs.register(`^\s*(contact-us|maria|emily|jane)\s*$`, db.Teacher())
+	drs.register(`^\s*(contact(\-us)?|maria|emily|jane)\s*$`, db.Teacher())
 	drs.register(`^\s*(help|h|帮助)\s*$`, help)
 	drs.register(`^\s*(events?|事件|活动)\s*$`, event)
 	drs.register(`^\s*(blogs?|日志|博客)\s*$`, blog)
 	drs.register(`^\s*(today|今日|当日)\s*$`, today)
+	drs.register(`^\s*(week|本周|这周)\s*$`, week)
 	drs.register(`^\s*(home|主页|首页)\s*$`, home)
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.Content
@@ -50,7 +51,8 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 				}
 			}
 		}
-		w.ReplyText(txt)
+		w.ReplyText("You said: " + txt + `
+Reply Help to get helps.`)
 		return nil
 	})
 	wc.HandleFunc(wechat.MsgTypeEventSubscribe, func(w wechat.ResponseWriter, r *wechat.Request) error {
@@ -71,7 +73,7 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 				}
 			}
 		}
-		w.ReplyText("Event key has no respond " + txt)
+		w.ReplyText("Oops! Wrong key: " + txt)
 		return nil
 	})
 }
@@ -108,7 +110,10 @@ Help
 Event
 	Get Events
 Blog
-	Get Blogs` + adm)
+	Get Blogs
+Contact
+	Get Contact Info
+` + adm)
 	return nil
 }
 
@@ -124,8 +129,23 @@ func (d dua) Len() int {
 func (d dua) Swap(i, j int) {
 	d[i], d[j] = d[j], d[i]
 }
-func today(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	deferr := errors.New("Ooops! No event today!")
+
+func getEventArticle(event *json.Json) (wechat.Article, time.Duration) {
+	return wechat.Article{
+		Url:         db.Url + event.Get("fullUrl").MustString(),
+		Title:       event.Get("title").MustString(),
+		PicUrl:      event.Get("assetUrl").MustString(),
+		Description: event.Get("excerpt").MustString(),
+	}, time.Duration(event.Get("startDate").MustInt64())
+}
+
+//Handle event request.
+func handleEvent(c *db.DBConfig,
+	w wechat.ResponseWriter,
+	r *wechat.Request,
+	check func(*time.Time) bool,
+	errstr string) error {
+	deferr := errors.New(errstr)
 	msg, err := c.QueryMsg(db.Events)
 	if err != nil {
 		w.ReplyText(deferr.Error())
@@ -139,17 +159,9 @@ func today(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 	mapa := map[time.Duration]wechat.Article{}
 	past := j.Get("upcomming")
 	for i, _ := range past.MustArray() {
-		event := past.GetIndex(i)
-		a := wechat.Article{
-			Url:         db.Url + event.Get("fullUrl").MustString(),
-			Title:       event.Get("title").MustString(),
-			PicUrl:      event.Get("assetUrl").MustString(),
-			Description: event.Get("excerpt").MustString(),
-		}
-		f := time.Duration(event.Get("startDate").MustInt64())
+		a, f := getEventArticle(past.GetIndex(i))
 		tf := BaseTime.Add(f * time.Millisecond)
-		now := time.Now()
-		if tf.Day() == now.Day() {
+		if check(&tf) {
 			mapa[f] = a
 		}
 	}
@@ -177,65 +189,41 @@ func today(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 	return nil
 }
 
+//Upcoming event, only list 3 events.
 func event(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	msg, err := c.QueryMsg(db.Events)
-	if err != nil {
-		w.ReplyText("Sorry, No event found!")
-		return nil
-	}
-	j, err := json.NewJson([]byte(msg.Content))
-	if err != nil {
-		w.ReplyText(err.Error())
-		return nil
-	}
-	mapa := map[int]wechat.Article{}
-	past := j.Get("upcoming")
-	for i, _ := range past.MustArray() {
-		event := past.GetIndex(i)
-		a := wechat.Article{
-			Url:         db.Url + event.Get("fullUrl").MustString(),
-			Title:       event.Get("title").MustString(),
-			PicUrl:      event.Get("assetUrl").MustString(),
-			Description: event.Get("excerpt").MustString(),
-		}
-		t := event.Get("startDate").MustInt()
-		mapa[t] = a
-	}
-	if len(mapa) == 0 {
-		return errors.New("no new events")
-	}
-	var keys []int
-	for k, _ := range mapa {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-	res := []wechat.Article{}
-	if len(keys) > db.MaxArticles {
-		keys = keys[len(keys)-db.MaxArticles:]
-	}
-	n := len(keys)
-	for i := 0; i < n/2; i++ {
-		keys[i], keys[n-1-i] = keys[n-1-i], keys[i]
-	}
-	for _, k := range keys {
-		res = append(res, mapa[k])
-	}
-	w.ReplyNews(res)
-	return nil
+	return handleEvent(c, w, r, func(t *time.Time) bool {
+		return true
+	}, `Oops! No event recently!`)
 }
 
+//Today's events.
+func today(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
+	return handleEvent(c, w, r, func(t *time.Time) bool {
+		return time.Now().Day() == t.Day()
+	}, `Oops! No event today!`)
+}
+
+//This week's events.
+func week(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
+	return handleEvent(c, w, r, func(t *time.Time) bool {
+		return time.Now().Day() == t.Day()
+	}, `Oops! No event this week!`)
+}
+
+//Recent Blogs.
 func blog(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
-	msg, err := c.QueryMsg(db.Events)
+	deferr := errors.New(`Oops! No blog recently!`)
+	msg, err := c.QueryMsg(db.Blog)
 	if err != nil {
-		w.ReplyText("Sorry, No event found!")
+		w.ReplyText(deferr.Error())
 		return nil
 	}
 	j, err := json.NewJson([]byte(msg.Content))
 	if err != nil {
-		w.ReplyText(err.Error())
+		w.ReplyText(deferr.Error())
 		return nil
 	}
-	mapa := map[int]wechat.Article{}
+	mapa := map[time.Duration]wechat.Article{}
 	past := j.Get("items")
 	for i, _ := range past.MustArray() {
 		event := past.GetIndex(i)
@@ -245,17 +233,18 @@ func blog(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
 			PicUrl:      event.Get("assetUrl").MustString(),
 			Description: event.Get("excerpt").MustString(),
 		}
-		t := event.Get("addedOn").MustInt()
+		t := time.Duration(event.Get("addedOn").MustInt64())
 		mapa[t] = a
 	}
 	if len(mapa) == 0 {
-		return errors.New("no new events")
+		w.ReplyText(deferr.Error())
+		return nil
 	}
-	var keys []int
+	var keys dua
 	for k, _ := range mapa {
 		keys = append(keys, k)
 	}
-	sort.Ints(keys)
+	sort.Sort(keys)
 	res := []wechat.Article{}
 	if len(keys) > db.MaxArticles {
 		keys = keys[:db.MaxArticles]

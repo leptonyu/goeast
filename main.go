@@ -72,6 +72,11 @@ func main() {
 						Key:  "Today",
 					},
 					wechat.MenuButton{
+						Name: "Event Week",
+						Type: "click",
+						Key:  "Week",
+					},
+					wechat.MenuButton{
 						Name: "Recent Events",
 						Type: "click",
 						Key:  "Event",
@@ -93,7 +98,7 @@ func main() {
 				Name: "Contact",
 				SubButtons: []wechat.MenuButton{
 					wechat.MenuButton{
-						Name: "Contect Us",
+						Name: "Contact Us",
 						Type: "click",
 						Key:  "contact-us",
 					},

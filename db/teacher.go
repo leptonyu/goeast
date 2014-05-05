@@ -32,7 +32,8 @@ var (
 		Email:   "janeluo@goeast.cn",
 		Skype:   "jane.qiongluo",
 	}
-	contact = "contact-us"
+	contact   = "contact"
+	contactus = contact + "-us"
 )
 
 type teacher struct {
@@ -55,6 +56,8 @@ func Teacher() func(*DBConfig, wechat.ResponseWriter, *wechat.Request) error {
 		case jane.Id:
 			return t(w, jane)
 		case contact:
+			return cc(w)
+		case contactus:
 			return cc(w)
 		default:
 			return errors.New("Not found!")

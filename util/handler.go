@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+var BaseTime = time.Date(1970, 1, 1, 0, 0, 0, 0, time.Local).Add(8 * time.Hour)
+
 type dispatchRoute struct {
 	regx    *regexp.Regexp
 	handler RouteFunc
@@ -35,6 +37,7 @@ func DispatchFunc(config *db.DBConfig, wc *wechat.WeChat) {
 	drs.register(`^\s*(help|h|帮助)\s*$`, help)
 	drs.register(`^\s*(events?|事件|活动)\s*$`, event)
 	drs.register(`^\s*(blogs?|日志|博客)\s*$`, blog)
+	drs.register(`^\s*(today|今日|当日)\s*$`, today)
 	drs.register(`^\s*(home|主页|首页)\s*$`, home)
 	wc.HandleFunc(wechat.MsgTypeText, func(w wechat.ResponseWriter, r *wechat.Request) error {
 		txt := r.Content
@@ -106,6 +109,71 @@ Event
 	Get Events
 Blog
 	Get Blogs` + adm)
+	return nil
+}
+
+type dua []time.Duration
+
+func (d dua) Less(i, j int) bool {
+	return d[i] < d[j]
+}
+
+func (d dua) Len() int {
+	return len(d)
+}
+func (d dua) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+func today(c *db.DBConfig, w wechat.ResponseWriter, r *wechat.Request) error {
+	deferr := errors.New("Ooops! No event today!")
+	msg, err := c.QueryMsg(db.Events)
+	if err != nil {
+		w.ReplyText(deferr.Error())
+		return nil
+	}
+	j, err := json.NewJson([]byte(msg.Content))
+	if err != nil {
+		w.ReplyText(deferr.Error())
+		return nil
+	}
+	mapa := map[time.Duration]wechat.Article{}
+	past := j.Get("upcomming")
+	for i, _ := range past.MustArray() {
+		event := past.GetIndex(i)
+		a := wechat.Article{
+			Url:         db.Url + event.Get("fullUrl").MustString(),
+			Title:       event.Get("title").MustString(),
+			PicUrl:      event.Get("assetUrl").MustString(),
+			Description: event.Get("excerpt").MustString(),
+		}
+		f := time.Duration(event.Get("startDate").MustInt64())
+		tf := BaseTime.Add(f * time.Millisecond)
+		now := time.Now()
+		if tf.Day() == now.Day() {
+			mapa[f] = a
+		}
+	}
+	if len(mapa) == 0 {
+		w.ReplyText(deferr.Error())
+		return nil
+	}
+	var keys dua
+	for k, _ := range mapa {
+		keys = append(keys, k)
+	}
+	sort.Sort(keys)
+	res := []wechat.Article{}
+	if len(keys) > db.MaxArticles {
+		keys = keys[len(keys)-db.MaxArticles:]
+	}
+	n := len(keys)
+	for i := 0; i < n/2; i++ {
+		keys[i], keys[n-1-i] = keys[n-1-i], keys[i]
+	}
+	for _, k := range keys {
+		res = append(res, mapa[k])
+	}
+	w.ReplyNews(res)
 	return nil
 }
 

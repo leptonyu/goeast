@@ -1,0 +1,13 @@
+appid:1234567
+secret:abcdefg
+token:asjdlkfjlsadkjf
+api:api
+port:
+ - 8080
+ - 8081
+ - 8082
+admin:
+ - id:aaaaaaaa
+   name:Daniel
+ - id:bbbbbbbb
+   name:Maria

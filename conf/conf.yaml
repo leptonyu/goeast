@@ -1,13 +1,8 @@
-appid:1234567
-secret:abcdefg
-token:asjdlkfjlsadkjf
+appid:wxd74a3c3100a4167e
+secret:848c3078914c816fe4be523988f75426
+token:PRHEFG7CoeeiKLCuCDTp4qeJvUP2V9
 api:api
 port:
  - 8080
  - 8081
  - 8082
-admin:
- - id:aaaaaaaa
-   name:Daniel
- - id:bbbbbbbb
-   name:Maria

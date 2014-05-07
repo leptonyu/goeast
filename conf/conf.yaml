@@ -1,8 +1,11 @@
-appid:wxd74a3c3100a4167e
-secret:848c3078914c816fe4be523988f75426
-token:PRHEFG7CoeeiKLCuCDTp4qeJvUP2V9
-api:api
-port:
+appid:    wxd74a3c3100a4167e
+secret:   848c3078914c816fe4be523988f75426
+token:    PRHEFG7CoeeiKLCuCDTp4qeJvUP2V9
+api:      next
+username: 
+password: 
+host:    
+port:     
  - 8080
  - 8081
  - 8082

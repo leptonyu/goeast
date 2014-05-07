@@ -107,11 +107,11 @@ func (wc *WeChat) HttpHandle(w http.ResponseWriter, r *http.Request) {
 			if requestPath == msgEvent {
 				requestPath += "." + msg.Event
 			}
+			go wc.atrw.Save(msg)
 			for _, route := range wc.routes {
 				if !route.regex.MatchString(requestPath) {
 					continue
 				}
-				go wc.atrw.Save(msg)
 				route.handler(&responseWriterData{
 					WC:           wc,
 					W:            w,

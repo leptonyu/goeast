@@ -105,6 +105,8 @@ func textDispatcher(config *wechat.MongoStorage) wechat.HandleFunc {
 	drs.Register(next, `^\s*(next|下一个)\s*$`)
 	drs.Register(week, `^\s*(week|本周|这周)\s*$`)
 	drs.Register(home, `^\s*(home|主页|首页)\s*$`)
+	drs.Register(course, `^\s*(courses?|课程)\s*$`)
+	drs.Register(free, `^\s*(trial|free|试听)\s*$`)
 	return func(w wechat.RespondWriter, r *wechat.Request) error {
 		txt := strings.TrimSpace(r.Content + r.EventKey)
 		sig := strings.ToLower(txt)
@@ -134,13 +136,12 @@ func home(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
 }
 func help(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
 	w.ReplyText(`Welcome to <a href='` + Url +
-		`'>GoEast Language Centers</a>, use the following keywords to get further information:` +
-		"\nHome\n  Get HomePage" +
-		"\nEvent\n  Get Events" +
-		"\nBlog\n  Get Blogs" +
-		"\nNext\n  Get Next Event" +
-		"\nWeek\n  Get Nexti 7ds Event" +
-		"\nContact\n  Get Contact Info")
+		`'>GoEast Language Centers</a>, please use the following keywords to get further information:` +
+		"\n\nHome/Blog\n  Get homepage or recent blogs." +
+		"\n\nEvent/Next/Week\n  Get information of our recent events" +
+		"\n\nCourse/Trial\n  Get information of our courses" +
+		"\n\nContact\nEmily/Maria/Jane\n  Get contact infomation of us." +
+		"\n\nIf you have any question about us, please send an email to coursecenter@goeast.cn")
 	return nil
 }
 
@@ -363,5 +364,46 @@ Telephone:
 
   Email: 
   coursecenter@goeast.cn`)
+	return nil
+}
+
+var (
+	trial = wechat.Article{
+		Title:       `Free Trial`,
+		Url:         Url + `/free-trials`,
+		PicUrl:      `http://static.squarespace.com/static/52141adee4b0476aaa6af594/t/53026a93e4b01cb1fb30d170/1392667284963/XJL_8799hero.jpg?format=1500w`,
+		Description: `Feel free to sign up for our free online trial classes or 1 hr free one on one tutoring sessions. Sign up now to reserve your spot, before they run out! NOTE: Free trial courses all take place on Fridays, and free tutoring trials take place on Wednesdays and Saturdays.`,
+	}
+	o2o = wechat.Article{
+		Title:  `1 On 1 Tutoring`,
+		Url:    Url + `/1-on-1-tutoring`,
+		PicUrl: `http://static.squarespace.com/static/52141adee4b0476aaa6af594/t/52f5334ce4b087ee0881b625/1391801166804/Lindasmall.jpg?format=1500w`,
+	}
+	online = wechat.Article{
+		Title:       `Online Courses`,
+		Url:         Url + `/online-courses`,
+		PicUrl:      `http://static.squarespace.com/static/52141adee4b0476aaa6af594/t/52e853e6e4b00b97daff0302/1390957544785/XJL_1224small.jpg?format=1500w`,
+		Description: `Learning Mandarin online has never been easier than with GoEast. We offer a wide array of Mandarin language and cultural courses to suit everyone's needs and capabilities. GoEast courses are, as always, taught live by a professional instructor with years of experience and a passion for language and learning.`,
+	}
+
+	onsite = wechat.Article{
+		Title:       `On Site Courses`,
+		Url:         Url + `/on-site-courses`,
+		PicUrl:      `http://static.squarespace.com/static/52141adee4b0476aaa6af594/t/52f95ea7e4b0116de8c3582e/1392074410688/XJL_8918-small.jpg?format=1500w`,
+		Description: `You can't replicate the experience of learning a new language with real people in a collaborative environment. For this reason GoEast regularly runs a series of courses that take place at our Shanghai campus.  Whether you need a crash course in Mandarin for business, obtain HSK4 certification, or simply would like to learn some travel Mandarin, we have a course for you. GoEast also offers cultural events if you'd like to meet some people, or casually learn about Chinese culture.`,
+	}
+)
+
+func course(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
+	w.ReplyNews([]wechat.Article{
+		o2o, online, onsite, trial,
+	})
+	return nil
+}
+
+func free(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
+	w.ReplyNews([]wechat.Article{
+		trial,
+	})
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/go-martini/martini"
 	"github.com/kylelemons/go-gypsy/yaml"
 	"github.com/leptonyu/goeast/logic"
-	"github.com/leptonyu/wechat/db"
+	"github.com/leptonyu/wechat"
 	"html/template"
 	"log"
 	"net/http"
@@ -30,7 +30,7 @@ func main() {
 		log.Fatal("api must be set!")
 		return
 	}
-	mongo := db.New(username, password, host, api)
+	mongo := wechat.NewMongo(username, password, host, api)
 	if *init {
 		appid, _ := config.Get("appid")
 		secret, _ := config.Get("secret")

@@ -2,10 +2,9 @@ package logic
 
 import (
 	"github.com/leptonyu/wechat"
-	"github.com/leptonyu/wechat/db"
 )
 
-func Init(x *db.MongoStorage) error {
+func Init(x *wechat.MongoStorage) error {
 	menu := &wechat.Menu{}
 	menu.Buttons = []wechat.MenuButton{
 		wechat.MenuButton{

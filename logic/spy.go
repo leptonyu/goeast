@@ -1,9 +1,9 @@
 package logic
 
 import (
-	"github.com/leptonyu/wechat/db"
+	"github.com/leptonyu/wechat"
 )
 
-func Spy(x *db.MongoStorage) error {
+func Spy(x *wechat.MongoStorage) error {
 	return nil
 }

@@ -41,16 +41,20 @@ func main() {
 		if err := mongo.Init(appid, secret, token); err != nil {
 			log.Fatal(err)
 		}
-		logic.Init(mongo)
+		if err := logic.Init(mongo); err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		if *port == 8080 {
 			go logic.Spy(mongo)
+		}
+		if err := logic.Dispatch(mongo); err != nil {
+			log.Fatal(err)
 		}
 		m := martini.Classic()
 		m.NotFound(Template("404.tpl", m))
 		m.Use(martini.Static("static", martini.StaticOptions{Prefix: "static"}))
 		m.Get("/", Template("index.tpl", m))
-		logic.Dispatch(mongo)
 		wc, _ := mongo.GetWeChat()
 		m.Get("/"+api, wc.ServeHTTP)
 		m.Post("/"+api, wc.ServeHTTP)

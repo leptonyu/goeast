@@ -53,7 +53,7 @@ if [ $? -ne 0 ]; then
 	exit 201
 fi
 
-export http_proxy=177.72.181.1:3128
+export http_proxy=23.251.144.137:3128
 
 for p in 8080 8081 8082
 do
@@ -71,9 +71,9 @@ do
 		rm $flg
 	fi
 	echo Starting service $p
-	nohup $port/$PRGNAME -port=$p -api='api' >> $port/$p.log 2>&1 &
+	nohup $port/$PRGNAME -port=$p  >> $port/$p.log 2>&1 &
 	pid=`ps -ef | grep $PRGNAME | grep port=$p | awk '{print $2}'`
-	if echo $pid | egrep -q '^[0-9]+$'; then
+	if echo $pid | grep -qE '^[0-9]+$'; then
 		echo $pid > $flg
 		echo Service $p is started!
 	else

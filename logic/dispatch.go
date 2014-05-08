@@ -2,6 +2,7 @@ package logic
 
 import (
 	"errors"
+	"fmt"
 	json "github.com/bitly/go-simplejson"
 	"github.com/leptonyu/wechat"
 	"github.com/leptonyu/wechat/db"
@@ -62,18 +63,18 @@ func Dispatch(x *db.MongoStorage) error {
 	if err != nil {
 		return err
 	}
-	wc.RegisterHandler(textDispatcher(x), wechat.MsgTypeText)
+	wc.RegisterHandler(textDispatcher(x), wechat.MsgTypeText, wechat.MsgTypeEventClick)
 	wc.RegisterHandler(func(w wechat.RespondWriter, r *wechat.Request) error {
-		return help(x, w)
+		return help(x, w, "Help")
 	}, wechat.MsgTypeEventSubscribe)
 
 	wc.RegisterHandler(func(w wechat.RespondWriter, r *wechat.Request) error {
-		return help(x, w)
+		return help(x, w, "Help")
 	}, wechat.MsgTypeEventScan)
 	return nil
 }
 
-type TextFunc func(*db.MongoStorage, wechat.RespondWriter) error
+type TextFunc func(*db.MongoStorage, wechat.RespondWriter, string) error
 
 type TextRoute struct {
 	regx   *regexp.Regexp
@@ -97,7 +98,8 @@ func (t *TextRoutes) Register(f TextFunc, pattern ...string) {
 
 func textDispatcher(config *db.MongoStorage) wechat.HandleFunc {
 	drs := &TextRoutes{}
-	drs.Register(teacher, `^\s*(contact(\-us)?|maria|emily|jane)\s*$`)
+	drs.Register(contact, `^\s*(contact(\-us)?|联系方式)\s*$`)
+	drs.Register(teacher, `^\s*(maria|emily|jane)\s*$`)
 	drs.Register(help, `^\s*(help|h|帮助)\s*$`)
 	drs.Register(event, `^\s*(events?|事件|活动)\s*$`)
 	drs.Register(blog, `^\s*(blogs?|日志|博客)\s*$`)
@@ -109,7 +111,7 @@ func textDispatcher(config *db.MongoStorage) wechat.HandleFunc {
 		sig := strings.ToLower(txt)
 		for _, v := range *drs {
 			if v.regx.MatchString(sig) {
-				err := v.handle(config, w)
+				err := v.handle(config, w, txt)
 				if err == nil {
 					return nil
 				}
@@ -120,7 +122,7 @@ Reply Help to get helps.`)
 		return nil
 	}
 }
-func home(c *db.MongoStorage, w wechat.RespondWriter) error {
+func home(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
 	w.ReplyNews([]wechat.Article{
 		wechat.Article{
 			Title:       "GoEast Language Centers",
@@ -131,7 +133,7 @@ func home(c *db.MongoStorage, w wechat.RespondWriter) error {
 	})
 	return nil
 }
-func help(c *db.MongoStorage, w wechat.RespondWriter) error {
+func help(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
 	w.ReplyText(`Welcome to <a href='` + Url +
 		`'>GoEast Language Centers</a>, use the following keywords to get further information:` +
 		"\nHome\n  Get HomePage" +
@@ -172,6 +174,7 @@ func getEventArticle(event *json.Json) (wechat.Article, time.Duration) {
 //Handle event request.
 func handleEvent(c *db.MongoStorage,
 	w wechat.RespondWriter,
+	txt string,
 	check func(time.Time) bool,
 	errstr string, max int) error {
 	deferr := errors.New(errstr)
@@ -217,28 +220,28 @@ func handleEvent(c *db.MongoStorage,
 }
 
 //Upcoming event, only list 3 events.
-func event(c *db.MongoStorage, w wechat.RespondWriter) error {
-	return handleEvent(c, w, func(t time.Time) bool {
+func event(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
+	return handleEvent(c, w, txt, func(t time.Time) bool {
 		return true
 	}, `Oops! No event recently!`, MaxArticles)
 }
 
 //Next event.
-func next(c *db.MongoStorage, w wechat.RespondWriter) error {
-	return handleEvent(c, w, func(t time.Time) bool {
+func next(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
+	return handleEvent(c, w, txt, func(t time.Time) bool {
 		return true
 	}, `Oops! No next event!`, 1)
 }
 
 //This week's events.
-func week(c *db.MongoStorage, w wechat.RespondWriter) error {
-	return handleEvent(c, w, func(t time.Time) bool {
+func week(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
+	return handleEvent(c, w, txt, func(t time.Time) bool {
 		return time.Since(t).Hours() >= -7*24
 	}, `Oops! No event in next 7 days!`, MaxArticles)
 }
 
 //Recent Blogs.
-func blog(c *db.MongoStorage, w wechat.RespondWriter) error {
+func blog(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
 	deferr := errors.New(`Oops! No blog recently!`)
 	msg, err := queryMsg(Blog, c)
 	if err != nil {
@@ -287,20 +290,79 @@ func blog(c *db.MongoStorage, w wechat.RespondWriter) error {
 	return nil
 }
 
-func teacher(c *db.MongoStorage, w wechat.RespondWriter) error {
-	a := strings.TrimSpace(strings.ToLower(r.Content + r.EventKey))
-	switch a {
+var (
+	maria = teacherinfo{
+		Id:      "maria",
+		Name:    "Maria MAO",
+		Chinese: "毛瑞",
+		Phone:   "(86)18192201219",
+		Email:   "mariamao@goeast.cn",
+		Skype:   "maoruimaria",
+	}
+	emily = teacherinfo{
+		Id:      "emily",
+		Name:    "Emily WANG",
+		Chinese: "王蓉",
+		Phone:   "(86)18016005118",
+		Email:   "emilywang@goeast.cn",
+		Skype:   "rongni_123",
+	}
+	jane = teacherinfo{
+		Id:      "jane",
+		Name:    "Jane LUO",
+		Chinese: "罗琼",
+		Phone:   "(86)13916723393",
+		Email:   "janeluo@goeast.cn",
+		Skype:   "jane.qiongluo",
+	}
+)
+
+type teacherinfo struct {
+	Id      string
+	Name    string
+	Chinese string
+	Phone   string
+	Email   string
+	Skype   string
+}
+
+func teacher(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
+	switch strings.ToLower(txt) {
 	case maria.Id:
 		return t(w, maria)
 	case emily.Id:
 		return t(w, emily)
 	case jane.Id:
 		return t(w, jane)
-	case contact:
-		return cc(w)
-	case contactus:
-		return cc(w)
 	default:
 		return errors.New("Not found!")
 	}
+}
+func t(w wechat.RespondWriter, tt teacherinfo) error {
+	w.ReplyText(fmt.Sprintf(`%v (%v)
+Teacher & Consultant
+GoEast Language Center
+
+Telephone: 
+  %v
+
+Skype:
+  %v
+
+Email: 
+%v`, tt.Name, tt.Chinese, tt.Phone, tt.Skype, tt.Email))
+	return nil
+}
+
+func contact(c *db.MongoStorage, w wechat.RespondWriter, txt string) error {
+	w.ReplyText(`GoEast Language Center
+
+No 194-196 Zhengmin Road, Yangpu District, Shanghai, China
+
+Telephone: 
+  86-21-31326611  
+
+  Email: 
+  coursecenter@goeast.cn`)
+	return nil
 }

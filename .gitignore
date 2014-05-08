@@ -1,4 +1,3 @@
 #
 goeast
-tool/init
-tool/admin.list
+conf/conf.yaml

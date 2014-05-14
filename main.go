@@ -41,15 +41,15 @@ func main() {
 		if err := mongo.Init(appid, secret, token); err != nil {
 			log.Fatal(err)
 		}
-		if err := logic.Init(mongo); err != nil {
+		if err := logic.Init(mongo, config); err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		if *port == 8080 {
-			go logic.Spy(mongo)
-		}
 		if err := logic.Dispatch(mongo); err != nil {
 			log.Fatal(err)
+		}
+		if *port == 8080 {
+			go logic.Spy(mongo)
 		}
 		m := martini.Classic()
 		m.NotFound(Template("404.tpl", m))

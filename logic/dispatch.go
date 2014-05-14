@@ -95,10 +95,16 @@ func (t *TextRoutes) Register(f TextFunc, pattern ...string) {
 	}
 }
 
+var (
+	drs     = &TextRoutes{}
+	nameReg = `(?i)^\s*(name\s|我叫|我是|名字\s|my name is\s|this is\s|it\'s\s|I am\s|I\'m\s)\s*(.+)\.?\s*$`
+	dateReg = `^\s*([0-9]{8})\s*$`
+)
+
 func textDispatcher(config *wechat.MongoStorage) wechat.HandleFunc {
-	drs := &TextRoutes{}
 	drs.Register(contact, `^\s*(contact(\-us)?|联系方式)\s*$`)
 	drs.Register(teacher, `^\s*(maria|emily|jane)\s*$`)
+	drs.Register(name, nameReg)
 	drs.Register(help, `^\s*(help|h|帮助)\s*$`)
 	drs.Register(event, `^\s*(events?|事件|活动)\s*$`)
 	drs.Register(blog, `^\s*(blogs?|日志|博客)\s*$`)
@@ -118,25 +124,76 @@ func textDispatcher(config *wechat.MongoStorage) wechat.HandleFunc {
 				}
 			}
 		}
-		w.ReplyText("You said: " + txt + `
-Reply Help to get helps.`)
+		wel := `Thank you for your message, it has been received! You also can send an email to coursecenter@goeast.cn . 
+		
+Reply 'Help' to get helps.`
+		name, ad, err := config.GetUserName(r.FromUserName)
+		if err == nil {
+			if ad == `0` {
+				if err := admin(config, w, txt); err == nil {
+					return nil
+				}
+			}
+			w.ReplyText(`Hi ` + name + `, 
+` + wel)
+		} else {
+			w.ReplyText(`Hi GoEaster,
+` + wel + `
+
+Could you please tell me your name? Just reply 'Name'+Space+'Your Name' to me, Thank you!
+
+e.g.  Name Daniel`)
+		}
 		return nil
 	}
 }
+
+func admin(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
+	reg, _ := regexp.Compile(dateReg)
+	if reg.MatchString(txt) {
+		d, err := time.Parse("20060102", strings.TrimSpace(txt))
+		if err == nil {
+			d = d.Add(24 * time.Hour)
+			return c.Query(func(m *mgo.Database) error {
+				msg := SendText(d.Year(), d.Month(), d.Day(), m)
+				if msg == "" {
+					msg = "No message today!"
+				}
+				w.ReplyText(msg)
+				return nil
+			})
+
+		}
+	}
+	return errors.New("")
+}
+func name(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
+	reg, _ := regexp.Compile(nameReg)
+	str := reg.FindStringSubmatch(txt)
+	log.Println(str)
+	if len(str) >= 3 && str[2] != "" {
+		go c.SetUserName(w.FromUserId(), str[2], `1`)
+		w.ReplyText(`Hello ` + str[2] + `, thank you for your information.`)
+		return nil
+	} else {
+		return errors.New("")
+	}
+}
+
 func home(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
 	w.ReplyNews([]wechat.Article{
 		wechat.Article{
-			Title:       "GoEast Language Centers",
+			Title:       "GoEast Language Center",
 			PicUrl:      "http://static.squarespace.com/static/52141adee4b0476aaa6af594/t/52e83ec9e4b0dfc630da5953/1390952403577/XJL_8779-small.jpg",
 			Url:         Url,
-			Description: `GoEast Language centers is one of Shanghai's premiere Mandarin language schools. We offer tutoring services, online classes, and on-site classes at our beautiful Shanghai campus. Our mission is to teach Mandarin and Chinese culture in a fun, personal, and effective environment. At GoEast we focus on helping you achieve your learning goals with as much personal attention as possible and no self help gimmicks! Learning language is best done with others, and we hope you'll join us at GoEast! `,
+			Description: `GoEast Language center is one of Shanghai's premiere Mandarin language schools. We offer tutoring services, online classes, and on-site classes at our beautiful Shanghai campus. Our mission is to teach Mandarin and Chinese culture in a fun, personal, and effective environment. At GoEast we focus on helping you achieve your learning goals with as much personal attention as possible and no self help gimmicks! Learning language is best done with others, and we hope you'll join us at GoEast! `,
 		},
 	})
 	return nil
 }
 func help(c *wechat.MongoStorage, w wechat.RespondWriter, txt string) error {
 	w.ReplyText(`Welcome to <a href='` + Url +
-		`'>GoEast Language Centers</a>, please use the following keywords to get further information:` +
+		`'>GoEast Language Center</a>, please use the following keywords to get further information:` +
 		"\n\nHome/Blog\n  Get homepage or recent blogs." +
 		"\n\nEvent/Next/Week\n  Get information of our recent events" +
 		"\n\nCourse/Trial\n  Get information of our courses" +
@@ -343,14 +400,11 @@ func t(w wechat.RespondWriter, tt teacherinfo) error {
 Teacher & Consultant
 GoEast Language Center
 
-Telephone: 
-  %v
-
 Skype:
   %v
 
 Email: 
-%v`, tt.Name, tt.Chinese, tt.Phone, tt.Skype, tt.Email))
+%v`, tt.Name, tt.Chinese, tt.Skype, tt.Email))
 	return nil
 }
 
@@ -362,8 +416,8 @@ No 194-196 Zhengmin Road, Yangpu District, Shanghai, China
 Telephone: 
   86-21-31326611  
 
-  Email: 
-  coursecenter@goeast.cn`)
+Email: 
+ coursecenter@goeast.cn`)
 	return nil
 }
 

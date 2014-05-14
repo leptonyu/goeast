@@ -1,10 +1,19 @@
 package logic
 
 import (
+	"github.com/kylelemons/go-gypsy/yaml"
 	"github.com/leptonyu/wechat"
+	"labix.org/v2/mgo"
+	"labix.org/v2/mgo/bson"
 )
 
-func Init(x *wechat.MongoStorage) error {
+type User struct {
+	Id    string
+	Name  string
+	Admin string
+}
+
+func Init(x *wechat.MongoStorage, y *yaml.File) error {
 	menu := &wechat.Menu{}
 	menu.Buttons = []wechat.MenuButton{
 		wechat.MenuButton{
@@ -103,5 +112,18 @@ func Init(x *wechat.MongoStorage) error {
 	if err != nil {
 		return err
 	}
-	return wc.CreateMenu(menu)
+	if err := wc.CreateMenu(menu); err != nil {
+		return err
+	}
+
+	return x.Query(func(d *mgo.Database) error {
+		_, err := d.C("wechat").Upsert(bson.M{"name": "mail"}, Mail{
+			Name:     "mail",
+			User:     y.Require("muser"),
+			Password: y.Require("mpassword"),
+			Host:     y.Require("mhost"),
+			To:       y.Require("mto"),
+		})
+		return err
+	})
 }

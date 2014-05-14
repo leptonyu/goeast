@@ -352,7 +352,6 @@ var (
 		Id:      "maria",
 		Name:    "Maria MAO",
 		Chinese: "毛瑞",
-		Phone:   "(86)18192201219",
 		Email:   "mariamao@goeast.cn",
 		Skype:   "maoruimaria",
 	}
@@ -360,7 +359,6 @@ var (
 		Id:      "emily",
 		Name:    "Emily WANG",
 		Chinese: "王蓉",
-		Phone:   "(86)18016005118",
 		Email:   "emilywang@goeast.cn",
 		Skype:   "rongni_123",
 	}
@@ -368,7 +366,6 @@ var (
 		Id:      "jane",
 		Name:    "Jane LUO",
 		Chinese: "罗琼",
-		Phone:   "(86)13916723393",
 		Email:   "janeluo@goeast.cn",
 		Skype:   "jane.qiongluo",
 	}

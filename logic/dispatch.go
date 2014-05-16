@@ -37,23 +37,46 @@ type Msg struct {
 func queryMsg(key string, x *wechat.MongoStorage) (*Msg, error) {
 	msg := &Msg{}
 	err := x.Query(func(m *mgo.Database) error {
-		err := m.C("web").Find(bson.M{"name": key}).One(&msg)
-		if err != nil || time.Since(msg.ExpireTime).Seconds() >= 0 {
-			res, err := http.Get(Url + key + "?format=json-pretty")
-			if err != nil {
-				return err
+		er := m.C("web").Find(bson.M{"name": key}).One(&msg)
+		log.Println(time.Since(msg.ExpireTime).Seconds())
+		if er != nil || time.Since(msg.ExpireTime).Seconds() >= 0 {
+			c := make(chan bool)
+			close(c)
+			go func() {
+				defer func() {
+					if x := recover(); x != nil {
+						//				log.Println(x)
+					}
+				}()
+				res, err := http.Get(Url + key + "?format=json-pretty")
+				if err != nil {
+					return
+				}
+				defer res.Body.Close()
+				body, err := ioutil.ReadAll(res.Body)
+				if err != nil {
+					return
+				}
+				m := &Msg{}
+				m.Name = key
+				m.Content = string(body)
+				m.ExpireTime = time.Now().Add(30 * time.Minute)
+				msg = m
+				go x.Query(func(m *mgo.Database) error {
+
+					m.C("web").Upsert(bson.M{"name": key}, msg)
+					log.Println("update compelete")
+					return nil
+				})
+				c <- true
+			}()
+			select {
+			case <-time.After(1 * time.Second):
+				log.Println("Time out!")
+			case <-c:
 			}
-			defer res.Body.Close()
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				return err
-			}
-			msg.Name = key
-			msg.Content = string(body)
-			msg.ExpireTime = time.Now().Add(30 * time.Minute)
-			_, err = m.C("web").Upsert(bson.M{"name": key}, msg)
 		}
-		return err
+		return er
 	})
 	return msg, err
 }

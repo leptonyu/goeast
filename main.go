@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -52,6 +53,7 @@ func main() {
 			go logic.Spy(mongo)
 		}
 		m := martini.Classic()
+		m.Map(log.New(os.Stdout, "[martini] ", log.Ldate|log.Ltime))
 		m.NotFound(Template("404.tpl", m))
 		m.Use(martini.Static("static", martini.StaticOptions{Prefix: "static"}))
 		m.Get("/", Template("index.tpl", m))
